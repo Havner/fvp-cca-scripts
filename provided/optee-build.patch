@@ -1,0 +1,130 @@
+diff --git a/common.mk b/common.mk
+index ef74c27..15da0d7 100644
+--- a/common.mk
++++ b/common.mk
+@@ -27,8 +27,8 @@ BASH ?= bash
+ ROOT ?= $(shell pwd)/..
+ 
+ UNAME_M				:= $(shell uname -m)
+-BUILD_PATH			?= $(ROOT)/build
+-LINUX_PATH			?= $(ROOT)/linux
++BUILD_PATH			?= $(ROOT)/3.optee-build
++LINUX_PATH			?= $(ROOT)/4.linux-cca
+ UBOOT_PATH			?= $(ROOT)/u-boot
+ BENCHMARK_APP_PATH		?= $(ROOT)/optee_benchmark
+ OPTEE_OS_PATH			?= $(ROOT)/optee_os
+diff --git a/fvp.mk b/fvp.mk
+index 7c8cfec..0779b87 100644
+--- a/fvp.mk
++++ b/fvp.mk
+@@ -52,26 +52,29 @@ else
+ EDK2_BUILD		?= RELEASE
+ endif
+ EDK2_BIN		?= $(EDK2_PLATFORMS_PATH)/Build/ArmVExpress-FVP-AArch64/$(EDK2_BUILD)_$(EDK2_TOOLCHAIN)/FV/FVP_$(EDK2_ARCH)_EFI.fd
+-FVP_USE_BASE_PLAT	?= n
+-ifeq ($(FVP_USE_BASE_PLAT),y)
+-FVP_PATH		?= $(ROOT)/Base_RevC_AEMvA_pkg/models/Linux64_GCC-9.3
+-FVP_BIN			?= FVP_Base_RevC-2xAEMvA
+-FVP_LINUX_DTB		?= $(LINUX_PATH)/arch/arm64/boot/dts/arm/fvp-base-revc.dtb
+-else
+-FVP_PATH		?= $(ROOT)/Foundation_Platformpkg/models/Linux64_GCC-9.3
+-FVP_BIN			?= Foundation_Platform
+-FVP_LINUX_DTB		?= $(LINUX_PATH)/arch/arm64/boot/dts/arm/foundation-v8-gicv3-psci.dtb
+-endif
+-ifeq ($(wildcard $(FVP_PATH)),)
+-$(error $(FVP_PATH) does not exist)
+-endif
++# FVP_USE_BASE_PLAT	?= y
++# ifeq ($(FVP_USE_BASE_PLAT),y)
++# FVP_PATH		?= $(ROOT)/Base_RevC_AEMvA_pkg/models/Linux64_GCC-9.3
++# FVP_BIN			?= FVP_Base_RevC-2xAEMvA
++# FVP_LINUX_DTB		?= $(LINUX_PATH)/arch/arm64/boot/dts/arm/fvp-base-revc.dtb
++# else
++# FVP_PATH		?= $(ROOT)/Foundation_Platformpkg/models/Linux64_GCC-9.3
++# FVP_BIN			?= Foundation_Platform
++# FVP_LINUX_DTB		?= $(LINUX_PATH)/arch/arm64/boot/dts/arm/foundation-v8-gicv3-psci.dtb
++# endif
++# ifeq ($(wildcard $(FVP_PATH)),)
++# $(error $(FVP_PATH) does not exist)
++# endif
+ GRUB_PATH		?= $(ROOT)/grub
+ GRUB_CONFIG_PATH	?= $(BUILD_PATH)/fvp/grub
+ OUT_PATH		?= $(ROOT)/out
+ GRUB_BIN		?= $(OUT_PATH)/bootaa64.efi
+-BOOT_IMG		?= $(OUT_PATH)/boot-fat.uefi.img
++BOOT_IMG		?= $(OUT_PATH)/boot.img
+ FTPM_PATH		?= $(ROOT)/ms-tpm-20-ref/Samples/ARM32-FirmwareTPM/optee_ta
+ 
++LINUX_BIN		?= ${OUT_PATH}/Image
++LINUX_DTB_BIN	?= ${OUT_PATH}/fvp-base-revc.dtb
++
+ ifeq ($(MEASURED_BOOT),y)
+ # By default enable FTPM for backwards compatibility.
+ MEASURED_BOOT_FTPM ?= y
+@@ -295,6 +298,29 @@ boot-img: grub buildroot
+ boot-img-clean:
+ 	rm -f $(BOOT_IMG)
+ 
++.PHONY: boot-img2
++boot-img2: boot-img-clean2 $(GRUB_BIN) ${LINUX_BIN} ${LINUX_DTB_BIN}
++	mformat -i $(BOOT_IMG) -n 64 -h 2 -T 65536 -v "BOOT IMG" -C ::
++	mkdir -p $(OUT_PATH)/rootfs
++	fakeroot bash -c " \
++		tar xfj $(OUT_PATH)/rootfs.tar.bz2 -C $(OUT_PATH)/rootfs; \
++		cd $(OUT_PATH)/rootfs; \
++		find . | cpio -H newc -o > $(OUT_PATH)/rootfs.cpio"
++	gzip $(OUT_PATH)/rootfs.cpio
++	mv $(OUT_PATH)/rootfs.cpio.gz $(OUT_PATH)/initrd.img
++	mcopy -i $(BOOT_IMG) $(LINUX_BIN) ::
++	mcopy -i $(BOOT_IMG) $(LINUX_DTB_BIN) ::
++	mmd -i $(BOOT_IMG) ::/EFI
++	mmd -i $(BOOT_IMG) ::/EFI/BOOT
++	mcopy -i $(BOOT_IMG) $(OUT_PATH)/initrd.img ::/initrd.img
++	mcopy -i $(BOOT_IMG) $(GRUB_BIN) ::/EFI/BOOT/bootaa64.efi
++	mcopy -i $(BOOT_IMG) $(GRUB_CONFIG_PATH)/grub.cfg ::/EFI/BOOT/grub.cfg
++
++.PHONY: boot-img-clean2
++boot-img-clean2:
++	rm -f $(BOOT_IMG)
++	rm -rf $(OUT_PATH)/rootfs
++
+ ################################################################################
+ # Run targets
+ ################################################################################
+diff --git a/fvp/grub/grub.cfg b/fvp/grub/grub.cfg
+index 4f399f7..893465d 100644
+--- a/fvp/grub/grub.cfg
++++ b/fvp/grub/grub.cfg
+@@ -1,10 +1,10 @@
+ set prefix='/EFI/BOOT'
+ 
+ set default="0"
+-set timeout=10
++set timeout=0
+ 
+ menuentry 'GNU/Linux (OP-TEE)' {
+-    linux /Image console=tty0 console=ttyAMA0,115200 earlycon=pl011,0x1c090000 root=/dev/disk/by-partlabel/system rootwait rw ignore_loglevel efi=noruntime
++    linux /Image console=tty0 console=ttyAMA0,115200 earlycon=pl011,0x1c090000 root=/dev/disk/by-partlabel/system rootwait rw ignore_loglevel efi=noruntime cpuidle.off=1
+     initrd /initrd.img
+-    devicetree /fvp.dtb
++    devicetree /fvp-base-revc.dtb
+ }
+diff --git a/toolchain.mk b/toolchain.mk
+index 2724a33..dfc2acd 100644
+--- a/toolchain.mk
++++ b/toolchain.mk
+@@ -45,12 +45,12 @@ endef
+ 
+ ifeq ($(UNAME_M),x86_64)
+ AARCH32_PATH 			?= $(TOOLCHAIN_ROOT)/aarch32
+-AARCH32_CROSS_COMPILE 		?= $(AARCH32_PATH)/bin/arm-linux-gnueabihf-
++AARCH32_CROSS_COMPILE 		?= $(AARCH32_PATH)/bin/arm-none-linux-gnueabihf-
+ AARCH32_GCC_VERSION 		?= gcc-arm-10.2-2020.11-x86_64-arm-none-linux-gnueabihf
+ SRC_AARCH32_GCC 		?= https://developer.arm.com/-/media/Files/downloads/gnu-a/10.2-2020.11/binrel/$(AARCH32_GCC_VERSION).tar.xz
+ 
+ AARCH64_PATH 			?= $(TOOLCHAIN_ROOT)/aarch64
+-AARCH64_CROSS_COMPILE 		?= $(AARCH64_PATH)/bin/aarch64-linux-gnu-
++AARCH64_CROSS_COMPILE 		?= $(AARCH64_PATH)/bin/aarch64-none-linux-gnu-
+ AARCH64_GCC_VERSION 		?= gcc-arm-10.2-2020.11-x86_64-aarch64-none-linux-gnu
+ SRC_AARCH64_GCC 		?= https://developer.arm.com/-/media/Files/downloads/gnu-a/10.2-2020.11/binrel/$(AARCH64_GCC_VERSION).tar.xz
+ 
