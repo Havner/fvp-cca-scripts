@@ -37,9 +37,19 @@ for correct paths, image creation, grub config and the like.
 Config for the linux kernel. Based on the one from islet with make oldconfig on
 newer kernel.
 
+## config-linux-realm
+
+Config for the linux kernel running in real. Based on the one from islet with
+make oldconfig on newer kernel.
+
 ## config-fvp
+
 Configuration for running the FVP. Tried one from TF-A docs but it didn't
 work. This one is from islet.
+
+## run-lkvm.sh
+
+Script for running realm linux on lkvm.
 
 # Other
 
@@ -48,3 +58,8 @@ work. This one is from islet.
 Simple rootfs for the non secure host. Based on busybox. Also taken from islet
 for now. Might need to be reworked when we need some more tools inside. For now
 it does the job.
+
+## initramfs-busybox-aarch64.cpio.gz
+
+Simple initramfs for the realm kernel. There is no root, initramfs should run
+some shell. Taken from islet.
