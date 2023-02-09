@@ -166,7 +166,7 @@ function init_toolchains() {
 function init_fvp() {
 	start init_fvp
 	mkdir "$FVP"                                                || stop
-	pushd "$FVP"                                                || stop
+	pushd "$FVP"
 	wget "$FVP_BASE_REVC"                                       || stop
 	tar xf `basename "$FVP_BASE_REVC"`                          || stop
 	cp "$PROVIDED/config-fvp" "$FVP/$FVP_SUBDIR"                || stop

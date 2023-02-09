@@ -14,36 +14,16 @@ index ef74c27..15da0d7 100644
  BENCHMARK_APP_PATH		?= $(ROOT)/optee_benchmark
  OPTEE_OS_PATH			?= $(ROOT)/optee_os
 diff --git a/fvp.mk b/fvp.mk
-index 7c8cfec..0779b87 100644
+index 7c8cfec..9f0584c 100644
 --- a/fvp.mk
 +++ b/fvp.mk
-@@ -52,26 +52,29 @@ else
- EDK2_BUILD		?= RELEASE
+@@ -62,16 +62,19 @@ FVP_PATH		?= $(ROOT)/Foundation_Platformpkg/models/Linux64_GCC-9.3
+ FVP_BIN			?= Foundation_Platform
+ FVP_LINUX_DTB		?= $(LINUX_PATH)/arch/arm64/boot/dts/arm/foundation-v8-gicv3-psci.dtb
  endif
- EDK2_BIN		?= $(EDK2_PLATFORMS_PATH)/Build/ArmVExpress-FVP-AArch64/$(EDK2_BUILD)_$(EDK2_TOOLCHAIN)/FV/FVP_$(EDK2_ARCH)_EFI.fd
--FVP_USE_BASE_PLAT	?= n
--ifeq ($(FVP_USE_BASE_PLAT),y)
--FVP_PATH		?= $(ROOT)/Base_RevC_AEMvA_pkg/models/Linux64_GCC-9.3
--FVP_BIN			?= FVP_Base_RevC-2xAEMvA
--FVP_LINUX_DTB		?= $(LINUX_PATH)/arch/arm64/boot/dts/arm/fvp-base-revc.dtb
--else
--FVP_PATH		?= $(ROOT)/Foundation_Platformpkg/models/Linux64_GCC-9.3
--FVP_BIN			?= Foundation_Platform
--FVP_LINUX_DTB		?= $(LINUX_PATH)/arch/arm64/boot/dts/arm/foundation-v8-gicv3-psci.dtb
--endif
 -ifeq ($(wildcard $(FVP_PATH)),)
 -$(error $(FVP_PATH) does not exist)
 -endif
-+# FVP_USE_BASE_PLAT	?= y
-+# ifeq ($(FVP_USE_BASE_PLAT),y)
-+# FVP_PATH		?= $(ROOT)/Base_RevC_AEMvA_pkg/models/Linux64_GCC-9.3
-+# FVP_BIN			?= FVP_Base_RevC-2xAEMvA
-+# FVP_LINUX_DTB		?= $(LINUX_PATH)/arch/arm64/boot/dts/arm/fvp-base-revc.dtb
-+# else
-+# FVP_PATH		?= $(ROOT)/Foundation_Platformpkg/models/Linux64_GCC-9.3
-+# FVP_BIN			?= Foundation_Platform
-+# FVP_LINUX_DTB		?= $(LINUX_PATH)/arch/arm64/boot/dts/arm/foundation-v8-gicv3-psci.dtb
-+# endif
 +# ifeq ($(wildcard $(FVP_PATH)),)
 +# $(error $(FVP_PATH) does not exist)
 +# endif
