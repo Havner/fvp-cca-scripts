@@ -7,6 +7,9 @@ talking about distro provided tools):
 https://trustedfirmware-a.readthedocs.io/en/latest/getting_started/prerequisites.html#package-installation-linux
 https://tf-rmm.readthedocs.io/en/latest/getting_started/getting-started.html#package-installation-ubuntu-20-04-x64
 
+Also cross compilation tools are needed for libfdt/kvmtool:
+crossbuild-essential-arm64.
+
 A quick summary for Ubuntu 20.04 (might not be complete). You need newer cmake
 than the one Ubuntu provides. Hence snap.
 
@@ -15,6 +18,7 @@ than the one Ubuntu provides. Hence snap.
     wget https://git.trustedfirmware.org/TF-RMM/tf-rmm.git/plain/docs/requirements.txt
     pip3 install --upgrade pip
     pip3 install -r requirements.txt
+	sudo apt-get install crossbuild-essential-arm64
 
 **IMPORTANT**
 
@@ -49,6 +53,17 @@ messages and on separate terminals do:
 
 The first one will show non secure world output, the second one will show RMM.
 
+# Running realm
+
+Login as 'root'
+
+Then:
+
+    # cd /qemu
+	# ./run-lkvm.sh
+
+It doesn't work yet though.
+
 # Other options
 
 Each step can be run on its own if there is a need:
@@ -62,13 +77,19 @@ Each step can be run on its own if there is a need:
       init_tf_a
       init_optee_build
       init_linux_cca
+      init_linux_cca_realm
+      init_dtcutil
+      init_kvmtool
       init_toolchains
       init_fvp
       init_out
       init           (does all the inits above including clean)
       build_tf_rmm
       build_tf_a
-      build_ns_linux
+      build_linux_ns
+      build_linux_realm
+      build_libfdt
+      build_kvmtool
       build          (does all the builds above in the correct order)
       run
 

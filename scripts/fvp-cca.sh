@@ -10,10 +10,14 @@ export TF_RMM="$ROOT/1.tf-rmm"
 export TF_A="$ROOT/2.tf-a"
 export OPTEE_BUILD="$ROOT/3.optee-build"
 export LINUX_CCA="$ROOT/4.linux-cca"
+export LINUX_CCA_REALM="$ROOT/5.linux-cca-realm"
+export DTCUTIL="$ROOT/6.dtcutil"
+export KVMTOOL="$ROOT/7.kvmtool"
 
 export TOOLCHAINS="$ROOT/toolchains"
 export FVP="$ROOT/fvp"
 export OUT="$ROOT/out"
+export SHARED_DIR="$OUT/shared_dir"
 
 
 export TF_RMM_REMOTE="https://git.trustedfirmware.org/TF-RMM/tf-rmm.git"
@@ -24,6 +28,12 @@ export OPTEE_BUILD_REMOTE="https://github.com/OP-TEE/build.git"
 export OPTEE_BUILD_REV=origin/master
 export LINUX_CCA_REMOTE="https://git.gitlab.arm.com/linux-arm/linux-cca.git"
 export LINUX_CCA_REV=origin/cca-host/rfc-v1
+export LINUX_CCA_REALM_REMOTE="https://git.gitlab.arm.com/linux-arm/linux-cca.git"
+export LINUX_CCA_REALM_REV=origin/cca-guest/rfc-v1
+export DTCUTIL_REMOTE="git://git.kernel.org/pub/scm/utils/dtc/dtc.git"
+export DTCUTIL_REV=origin/master
+export KVMTOOL_REMOTE="https://gitlab.arm.com/linux-arm/kvmtool-cca"
+export KVMTOOL_REV=origin/cca/rfc-v1
 
 # https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads
 # for building tf-rmm and tf-a
@@ -80,7 +90,7 @@ function start() {
 	color_blue
 	echo
 	echo "=================================="
-	echo "            $1"
+	echo "          $1"
 	echo "=================================="
 	color_none
 }
@@ -105,6 +115,9 @@ function init_clean() {
 	rm -rf "$TF_A"
 	rm -rf "$OPTEE_BUILD"
 	rm -rf "$LINUX_CCA"
+	rm -rf "$LINUX_CCA_REALM"
+	rm -rf "$DTCUTIL"
+	rm -rf "$KVMTOOL"
 	rm -rf "$TOOLCHAINS"
 	rm -rf "$FVP"
 	rm -rf "$OUT"
@@ -143,9 +156,37 @@ function init_linux_cca() {
 	git clone "$LINUX_CCA_REMOTE" "$LINUX_CCA"                  || stop
 	pushd "$LINUX_CCA"
 	git checkout -t -b fvp-cca $LINUX_CCA_REV                   || stop
-	cp -f "$PROVIDED/config-linux" "$LINUX_CCA/.config"         || stop
+	cp -v "$PROVIDED/config-linux" "$LINUX_CCA/.config"         || stop
 	popd
 	success init_linux_cca
+}
+
+function init_linux_cca_realm() {
+	start init_linux_cca_realm
+	git clone "$LINUX_CCA_REALM_REMOTE" "$LINUX_CCA_REALM"      || stop
+	pushd "$LINUX_CCA_REALM"
+	git checkout -t -b fvp-cca $LINUX_CCA_REALM_REV             || stop
+	cp -v "$PROVIDED/config-linux-realm" "$LINUX_CCA_REALM/.config" || stop
+	popd
+	success init_linux_cca_realm
+}
+
+function init_dtcutil() {
+	start init_dtcutil
+	git clone "$DTCUTIL_REMOTE" "$DTCUTIL"                      || stop
+	pushd "$DTCUTIL"
+	git checkout -t -b fvp-cca $DTCUTIL_REV                     || stop
+	popd
+	success init_dtcutil
+}
+
+function init_kvmtool() {
+	start init_kvmtool
+	git clone "$KVMTOOL_REMOTE" "$KVMTOOL"                      || stop
+	pushd "$KVMTOOL"
+	git checkout -t -b fvp-cca $KVMTOOL_REV                     || stop
+	popd
+	success init_kvmtool
 }
 
 function init_toolchains() {
@@ -169,7 +210,7 @@ function init_fvp() {
 	pushd "$FVP"
 	wget "$FVP_BASE_REVC"                                       || stop
 	tar xf `basename "$FVP_BASE_REVC"`                          || stop
-	cp "$PROVIDED/config-fvp" "$FVP/$FVP_SUBDIR"                || stop
+	cp -v "$PROVIDED/config-fvp" "$FVP/$FVP_SUBDIR"                || stop
 	popd
 	success init_fvp
 }
@@ -177,11 +218,12 @@ function init_fvp() {
 function init_out() {
 	start init_out
 	mkdir "$OUT"                                                || stop
-	pushd "$OUT"
-	cp "$PROVIDED/FVP_AARCH64_EFI.fd" "$OUT"                    || stop
-	cp "$PROVIDED/bootaa64.efi" "$OUT"                          || stop
-	cp "$PROVIDED/rootfs.tar.bz2" "$OUT"                        || stop
-	popd
+	mkdir "$SHARED_DIR"                                         || stop
+	cp -v "$PROVIDED/FVP_AARCH64_EFI.fd" "$OUT"                 || stop
+	cp -v "$PROVIDED/bootaa64.efi" "$OUT"                       || stop
+	cp -v "$PROVIDED/rootfs.tar.bz2" "$OUT"                     || stop
+	cp -v "$PROVIDED/initramfs-busybox-aarch64.cpio.gz" "$SHARED_DIR" || stop
+	cp -v "$PROVIDED/run-lkvm.sh" "$SHARED_DIR"                 || stop
 	success init_out
 }
 
@@ -191,6 +233,9 @@ function init() {
 	init_tf_a
 	init_optee_build
 	init_linux_cca
+	init_linux_cca_realm
+	init_dtcutil
+	init_kvmtool
 	init_toolchains
 	init_fvp
 	init_out
@@ -204,7 +249,7 @@ function build_tf_rmm() {
 	pushd "$TF_RMM"
 	cmake -DRMM_CONFIG=fvp_defcfg -S . -B build/                || stop
 	cmake --build build/                                        || stop
-	cp "$TF_RMM/build/Release/rmm.img" "$OUT"                   || stop
+	cp -fv "$TF_RMM/build/Release/rmm.img" "$OUT"               || stop
 	popd
 	unset CROSS_COMPILE
 	restore_path
@@ -224,22 +269,57 @@ function build_tf_a() {
 		 RMM="$OUT/rmm.img" \
 		 BL33="$OUT/FVP_AARCH64_EFI.fd" \
 		 all fip                                                || stop
-	cp "$TF_A/build/fvp/debug/bl1.bin" "$OUT"                   || stop
-	cp "$TF_A/build/fvp/debug/fip.bin" "$OUT"                   || stop
+	cp -fv "$TF_A/build/fvp/debug/bl1.bin" "$OUT"               || stop
+	cp -fv "$TF_A/build/fvp/debug/fip.bin" "$OUT"               || stop
 	popd
 	restore_path
 	success build_tf_a
 }
 
-function build_ns_linux() {
-	start build_ns_linux
+function build_linux_ns() {
+	start build_linux_ns
 	pushd "$OPTEE_BUILD"
 	make -j8 -f fvp.mk linux                                    || stop
-	cp "$LINUX_CCA/arch/arm64/boot/Image" "$OUT"                || stop
-	cp "$LINUX_CCA/arch/arm64/boot/dts/arm/fvp-base-revc.dtb" "$OUT" || stop
+	cp -fv "$LINUX_CCA/arch/arm64/boot/Image" "$OUT"            || stop
+	cp -fv "$LINUX_CCA/arch/arm64/boot/dts/arm/fvp-base-revc.dtb" "$OUT" || stop
 	make -j8 -f fvp.mk boot-img2                                || stop
 	popd
-	success build_ns_linux
+	success build_linux_ns
+}
+
+function build_linux_realm() {
+	start build_linux_realm
+	save_path
+	export PATH="$GCC_AARCH64_NONE_LINUX_BIN:$PATH"
+ 	pushd "$LINUX_CCA_REALM"
+ 	make CROSS_COMPILE=aarch64-none-linux-gnu- \
+		 ARCH=arm64 \
+		 -j8                                                    || stop
+	cp -fv "$LINUX_CCA_REALM/arch/arm64/boot/Image" "$SHARED_DIR/Image.realm" || stop
+	popd
+	restore_path
+	success build_linux_realm
+}
+
+function build_libfdt() {
+	start build_libfdt
+	pushd "$DTCUTIL"
+	# this is built using cross compiler (gcc9) from ubuntu
+	make CC=aarch64-linux-gnu-gcc libfdt                        || stop
+	popd
+	success build_libfdt
+}
+
+function build_kvmtool() {
+	start build_kvmtool
+	pushd "$KVMTOOL"
+	# this is built using cross compiler (gcc9) from ubuntu, it crashes on gcc11 from arm
+	make CROSS_COMPILE=aarch64-linux-gnu- \
+		 ARCH=arm64 \
+		 LIBFDT_DIR="$DTCUTIL/libfdt"                           || stop
+	cp -fv "$KVMTOOL/lkvm" "$SHARED_DIR"                        || stop
+	popd
+	success build_kvmtool
 }
 
 function build() {
@@ -252,7 +332,10 @@ function build() {
 
 	build_tf_rmm
 	build_tf_a
-	build_ns_linux
+	build_linux_ns
+	build_linux_realm
+	build_libfdt
+	build_kvmtool
 }
 
 function run() {
@@ -263,9 +346,8 @@ function run() {
 		-Q 1000                                             \
 		-C bp.secureflashloader.fname="$OUT/bl1.bin"        \
 		-C bp.flashloader0.fname="$OUT/fip.bin"             \
-		-C bp.virtioblockdevice.image_path="$OUT/boot.img"      || out
-# when we have some qemu prepare the P9 share dir
-#		-C bp.virtiop9device.root_path="$OUT/pc_share_dir"
+		-C bp.virtioblockdevice.image_path="$OUT/boot.img"  \
+		-C bp.virtiop9device.root_path="$SHARED_DIR"            || stop
 	popd
 }
 
@@ -278,13 +360,19 @@ Possible targets are:
   init_tf_a
   init_optee_build
   init_linux_cca
+  init_linux_cca_realm
+  init_dtcutil
+  init_kvmtool
   init_toolchains
   init_fvp
   init_out
   init           (does all the inits above including clean)
   build_tf_rmm
   build_tf_a
-  build_ns_linux
+  build_linux_ns
+  build_linux_realm
+  build_libfdt
+  build_kvmtool
   build          (does all the builds above in the correct order)
   run
 
