@@ -62,7 +62,7 @@ Then:
     # cd /qemu
 	# ./run-lkvm.sh
 
-It doesn't work yet though.
+Also give it time. It takes a while to load.
 
 # Other options
 
