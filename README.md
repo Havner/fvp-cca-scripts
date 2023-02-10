@@ -78,7 +78,7 @@ Each step can be run on its own if there is a need:
       init_optee_build
       init_linux_cca
       init_linux_cca_realm
-      init_dtcutil
+      init_dtc
       init_kvmtool
       init_toolchains
       init_fvp
