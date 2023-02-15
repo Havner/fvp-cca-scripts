@@ -210,7 +210,6 @@ function init_fvp() {
 	pushd "$FVP"
 	wget "$FVP_BASE_REVC"                                       || stop
 	tar xf `basename "$FVP_BASE_REVC"`                          || stop
-	cp -v "$PROVIDED/config-fvp" "$FVP/$FVP_SUBDIR"             || stop
 	popd
 	success init_fvp
 }
@@ -219,6 +218,7 @@ function init_out() {
 	start init_out
 	mkdir "$OUT"                                                || stop
 	mkdir "$SHARED_DIR"                                         || stop
+	cp -v "$PROVIDED/config-fvp" "$OUT"                         || stop
 	cp -v "$PROVIDED/FVP_AARCH64_EFI.fd" "$OUT"                 || stop
 	cp -v "$PROVIDED/bootaa64.efi" "$OUT"                       || stop
 	cp -v "$PROVIDED/rootfs.tar.bz2" "$OUT"                     || stop
@@ -342,7 +342,7 @@ function run() {
 	start running
 	pushd "$FVP/$FVP_SUBDIR"
 	./FVP_Base_RevC-2xAEMvA \
-		-f config-fvp \
+		-f "$OUT/config-fvp" \
 		-Q 1000 \
 		-C bp.secureflashloader.fname="$OUT/bl1.bin" \
 		-C bp.flashloader0.fname="$OUT/fip.bin" \
