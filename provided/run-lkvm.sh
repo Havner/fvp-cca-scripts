@@ -11,4 +11,6 @@
 	   -c 1                                          \
 	   -k Image.realm                                \
 	   -i initramfs-busybox-aarch64.cpio.gz          \
-	   -p "earlycon=ttyS0 printk.devkmsg=on"
+	   -p "earlycon=ttyS0 printk.devkmsg=on"         \
+	   --9p /qemu,FMR                                \
+	   "$@"
