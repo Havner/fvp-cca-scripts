@@ -10,7 +10,7 @@
 	   -m 256M                                       \
 	   -c 1                                          \
 	   -k Image.realm                                \
-	   -i initramfs-busybox-aarch64.cpio.gz          \
+	   -i initramfs-realm.cpio.gz                    \
 	   -p "earlycon=ttyS0 printk.devkmsg=on"         \
 	   --9p /qemu,FMR                                \
 	   "$@"

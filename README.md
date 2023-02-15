@@ -90,6 +90,7 @@ Each step can be run on its own if there is a need:
       build_linux_realm
       build_libfdt
       build_kvmtool
+	  build_initramfs
       build          (does all the builds above in the correct order)
       run
 

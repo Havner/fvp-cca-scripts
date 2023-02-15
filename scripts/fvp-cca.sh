@@ -18,6 +18,7 @@ TOOLCHAINS="$ROOT/toolchains"
 FVP="$ROOT/fvp"
 OUT="$ROOT/out"
 SHARED_DIR="$OUT/shared_dir"
+INITRAMFS="$OUT/initramfs"
 
 
 TF_RMM_REMOTE="https://git.trustedfirmware.org/TF-RMM/tf-rmm.git"
@@ -218,12 +219,13 @@ function init_out() {
 	start init_out
 	mkdir "$OUT"                                                || stop
 	mkdir "$SHARED_DIR"                                         || stop
+	mkdir "$INITRAMFS"                                          || stop
 	cp -v "$PROVIDED/config-fvp" "$OUT"                         || stop
 	cp -v "$PROVIDED/FVP_AARCH64_EFI.fd" "$OUT"                 || stop
 	cp -v "$PROVIDED/bootaa64.efi" "$OUT"                       || stop
 	cp -v "$PROVIDED/rootfs.tar.bz2" "$OUT"                     || stop
-	cp -v "$PROVIDED/initramfs-busybox-aarch64.cpio.gz" "$SHARED_DIR" || stop
 	cp -v "$PROVIDED/run-lkvm.sh" "$SHARED_DIR"                 || stop
+	tar xf "$PROVIDED/initramfs-realm.tar.bz2" -C "$INITRAMFS"  || stop
 	success init_out
 }
 
@@ -322,6 +324,16 @@ function build_kvmtool() {
 	success build_kvmtool
 }
 
+function build_initramfs() {
+	start build_initramfs
+	pushd "$INITRAMFS"
+	find . -print0 |                                         \
+		cpio --null --create --verbose --format=newc |       \
+		gzip --best > "$SHARED_DIR/initramfs-realm.cpio.gz"    || stop
+	popd
+	success build_initramfs
+}
+
 function build() {
 	if [ ! -d "$OUT" ]; then
 		color_red
@@ -336,6 +348,7 @@ function build() {
 	build_linux_realm
 	build_libfdt
 	build_kvmtool
+	build_initramfs
 }
 
 function run() {
@@ -373,6 +386,7 @@ Possible targets are:
   build_linux_realm
   build_libfdt
   build_kvmtool
+  build_initramfs
   build          (does all the builds above in the correct order)
   run
 
