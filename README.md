@@ -59,7 +59,7 @@ Login as 'root'
 
 Then:
 
-    # cd /qemu
+    # cd /shared
     # ./run-lkvm.sh
 
 Also give it time. It takes a while to load.
