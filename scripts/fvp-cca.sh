@@ -125,73 +125,73 @@ function init_clean() {
 }
 
 function init_tf_rmm() {
-	start init_tf_rmm
+	start ${FUNCNAME[0]}
 	git clone --recursive "$TF_RMM_REMOTE" "$TF_RMM"            || stop
 	pushd "$TF_RMM"
 	git checkout --recurse-submodules -t -b fvp-cca $TF_RMM_REV || stop
 	popd
-	success init_tf_rmm
+	success ${FUNCNAME[0]}
 }
 
 function init_tf_a() {
-	start init_tf_a
+	start ${FUNCNAME[0]}
 	git clone "$TF_A_REMOTE" "$TF_A"                            || stop
 	pushd "$TF_A"
 	git checkout -t -b fvp-cca $TF_A_REV                        || stop
 	popd
-	success init_tf_a
+	success ${FUNCNAME[0]}
 }
 
 function init_optee_build() {
-	start init_optee_build
+	start ${FUNCNAME[0]}
 	git clone "$OPTEE_BUILD_REMOTE" "$OPTEE_BUILD"              || stop
 	pushd "$OPTEE_BUILD"
 	git checkout -t -b fvp-cca $OPTEE_BUILD_REV                 || stop
 	patch -p1 < "$PROVIDED/optee-build.patch"                   || stop
 	popd
-	success init_optee_build
+	success ${FUNCNAME[0]}
 }
 
 function init_linux_cca() {
-	start init_linux_cca
+	start ${FUNCNAME[0]}
 	git clone "$LINUX_CCA_REMOTE" "$LINUX_CCA"                  || stop
 	pushd "$LINUX_CCA"
 	git checkout -t -b fvp-cca $LINUX_CCA_REV                   || stop
 	cp -v "$PROVIDED/config-linux" "$LINUX_CCA/.config"         || stop
 	popd
-	success init_linux_cca
+	success ${FUNCNAME[0]}
 }
 
 function init_linux_cca_realm() {
-	start init_linux_cca_realm
+	start ${FUNCNAME[0]}
 	git clone "$LINUX_CCA_REALM_REMOTE" "$LINUX_CCA_REALM"      || stop
 	pushd "$LINUX_CCA_REALM"
 	git checkout -t -b fvp-cca $LINUX_CCA_REALM_REV             || stop
 	cp -v "$PROVIDED/config-linux-realm" "$LINUX_CCA_REALM/.config" || stop
 	popd
-	success init_linux_cca_realm
+	success ${FUNCNAME[0]}
 }
 
 function init_dtc() {
-	start init_dtc
+	start ${FUNCNAME[0]}
 	git clone "$DTC_REMOTE" "$DTC"                              || stop
 	pushd "$DTC"
 	git checkout -t -b fvp-cca $DTC_REV                         || stop
 	popd
-	success init_dtc
+	success ${FUNCNAME[0]}
 }
 
 function init_kvmtool() {
-	start init_kvmtool
+	start ${FUNCNAME[0]}
 	git clone "$KVMTOOL_REMOTE" "$KVMTOOL"                      || stop
 	pushd "$KVMTOOL"
 	git checkout -t -b fvp-cca $KVMTOOL_REV                     || stop
 	popd
-	success init_kvmtool
+	success ${FUNCNAME[0]}
 }
 
 function init_toolchains() {
-	start init_toolchains
+	start ${FUNCNAME[0]}
 	mkdir "$TOOLCHAINS"                                         || stop
 	pushd "$TOOLCHAINS"
 	for LINK in "$GCC_AARCH64_NONE_ELF" "$GCC_ARM_NONE_EABI" "$GCC_AARCH64_NONE_LINUX" "$GCC_ARM_NONE_LINUX"; do
@@ -202,21 +202,21 @@ function init_toolchains() {
 	ln -s `basename "$GCC_AARCH64_NONE_LINUX" | sed -e 's#\.tar\.xz##g'` aarch64 || stop
 	ln -s `basename "$GCC_ARM_NONE_LINUX" | sed -e 's#\.tar\.xz##g'` aarch32     || stop
 	popd
-	success init_toolchains
+	success ${FUNCNAME[0]}
 }
 
 function init_fvp() {
-	start init_fvp
+	start ${FUNCNAME[0]}
 	mkdir "$FVP"                                                || stop
 	pushd "$FVP"
 	wget "$FVP_BASE_REVC"                                       || stop
 	tar xf `basename "$FVP_BASE_REVC"`                          || stop
 	popd
-	success init_fvp
+	success ${FUNCNAME[0]}
 }
 
 function init_out() {
-	start init_out
+	start ${FUNCNAME[0]}
 	mkdir "$OUT"                                                || stop
 	mkdir "$SHARED_DIR"                                         || stop
 	mkdir "$INITRAMFS"                                          || stop
@@ -226,7 +226,7 @@ function init_out() {
 	cp -v "$PROVIDED/rootfs.tar.bz2" "$OUT"                     || stop
 	cp -v "$PROVIDED/run-lkvm.sh" "$SHARED_DIR"                 || stop
 	tar xf "$PROVIDED/initramfs-realm.tar.bz2" -C "$INITRAMFS"  || stop
-	success init_out
+	success ${FUNCNAME[0]}
 }
 
 function init() {
@@ -244,7 +244,7 @@ function init() {
 }
 
 function build_tf_rmm() {
-	start build_tf_rmm
+	start ${FUNCNAME[0]}
 	save_path
 	export PATH="$GCC_AARCH64_NONE_ELF_BIN:$PATH"
 	export CROSS_COMPILE=aarch64-none-elf-
@@ -255,11 +255,11 @@ function build_tf_rmm() {
 	popd
 	unset CROSS_COMPILE
 	restore_path
-	success build_tf_rmm
+	success ${FUNCNAME[0]}
 }
 
 function build_tf_a() {
-	start build_tf_a
+	start ${FUNCNAME[0]}
 	save_path
 	export PATH="$GCC_AARCH64_NONE_ELF_BIN:$PATH"
 	pushd "$TF_A"
@@ -275,22 +275,22 @@ function build_tf_a() {
 	cp -fv "$TF_A/build/fvp/debug/fip.bin" "$OUT"               || stop
 	popd
 	restore_path
-	success build_tf_a
+	success ${FUNCNAME[0]}
 }
 
 function build_linux_ns() {
-	start build_linux_ns
+	start ${FUNCNAME[0]}
 	pushd "$OPTEE_BUILD"
 	make -j8 -f fvp.mk linux                                    || stop
 	cp -fv "$LINUX_CCA/arch/arm64/boot/Image" "$OUT"            || stop
 	cp -fv "$LINUX_CCA/arch/arm64/boot/dts/arm/fvp-base-revc.dtb" "$OUT" || stop
 	make -j8 -f fvp.mk boot-img2                                || stop
 	popd
-	success build_linux_ns
+	success ${FUNCNAME[0]}
 }
 
 function build_linux_realm() {
-	start build_linux_realm
+	start ${FUNCNAME[0]}
 	save_path
 	export PATH="$GCC_AARCH64_NONE_LINUX_BIN:$PATH"
  	pushd "$LINUX_CCA_REALM"
@@ -300,20 +300,20 @@ function build_linux_realm() {
 	cp -fv "$LINUX_CCA_REALM/arch/arm64/boot/Image" "$SHARED_DIR/Image.realm" || stop
 	popd
 	restore_path
-	success build_linux_realm
+	success ${FUNCNAME[0]}
 }
 
 function build_libfdt() {
-	start build_libfdt
+	start ${FUNCNAME[0]}
 	pushd "$DTC"
 	# this is built using cross compiler (gcc9) from ubuntu
 	make CC=aarch64-linux-gnu-gcc libfdt                        || stop
 	popd
-	success build_libfdt
+	success ${FUNCNAME[0]}
 }
 
 function build_kvmtool() {
-	start build_kvmtool
+	start ${FUNCNAME[0]}
 	pushd "$KVMTOOL"
 	# this is built using cross compiler (gcc9) from ubuntu, it crashes on gcc11 from arm
 	make CROSS_COMPILE=aarch64-linux-gnu- \
@@ -321,17 +321,17 @@ function build_kvmtool() {
 		 LIBFDT_DIR="$DTC/libfdt"                               || stop
 	cp -fv "$KVMTOOL/lkvm" "$SHARED_DIR"                        || stop
 	popd
-	success build_kvmtool
+	success ${FUNCNAME[0]}
 }
 
 function build_initramfs() {
-	start build_initramfs
+	start ${FUNCNAME[0]}
 	pushd "$INITRAMFS"
 	find . -print0 |                                         \
 		cpio --null --create --verbose --format=newc |       \
 		gzip --best > "$SHARED_DIR/initramfs-realm.cpio.gz"    || stop
 	popd
-	success build_initramfs
+	success ${FUNCNAME[0]}
 }
 
 function build() {
@@ -352,7 +352,7 @@ function build() {
 }
 
 function run() {
-	start running
+	start ${FUNCNAME[0]}
 	pushd "$FVP/$FVP_SUBDIR"
 	./FVP_Base_RevC-2xAEMvA \
 		-f "$OUT/config-fvp" \
