@@ -110,6 +110,10 @@ function stop() {
 }
 
 function init_clean() {
+    color_red
+    echo "Starting from scratch..."
+    color_none
+
     rm -rf "$TF_RMM"
     rm -rf "$TF_A"
     rm -rf "$LINUX_CCA_HOST"
