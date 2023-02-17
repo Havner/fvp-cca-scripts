@@ -18,7 +18,7 @@ than the one Ubuntu provides. Hence snap.
     wget https://git.trustedfirmware.org/TF-RMM/tf-rmm.git/plain/docs/requirements.txt
     pip3 install --upgrade pip
     pip3 install -r requirements.txt
-	sudo apt-get install crossbuild-essential-arm64
+    sudo apt-get install crossbuild-essential-arm64
 
 **IMPORTANT**
 
@@ -60,7 +60,7 @@ Login as 'root'
 Then:
 
     # cd /qemu
-	# ./run-lkvm.sh
+    # ./run-lkvm.sh
 
 Also give it time. It takes a while to load.
 
@@ -75,9 +75,8 @@ Each step can be run on its own if there is a need:
       init_clean
       init_tf_rmm
       init_tf_a
-      init_optee_build
-      init_linux_cca
-      init_linux_cca_realm
+      init_linux_host
+      init_linux_realm
       init_dtc
       init_kvmtool
       init_toolchains
@@ -86,11 +85,12 @@ Each step can be run on its own if there is a need:
       init           (does all the inits above including clean)
       build_tf_rmm
       build_tf_a
-      build_linux_ns
+      build_linux_host
       build_linux_realm
       build_libfdt
       build_kvmtool
-	  build_initramfs
+      build_root_host
+      build_root_realm
       build          (does all the builds above in the correct order)
       run
 

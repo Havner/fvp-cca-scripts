@@ -8,27 +8,25 @@ PROVIDED="$ROOT/provided"
 
 TF_RMM="$ROOT/1.tf-rmm"
 TF_A="$ROOT/2.tf-a"
-OPTEE_BUILD="$ROOT/3.optee-build"
-LINUX_CCA="$ROOT/4.linux-cca"
-LINUX_CCA_REALM="$ROOT/5.linux-cca-realm"
-DTC="$ROOT/6.dtc"
-KVMTOOL="$ROOT/7.kvmtool"
+LINUX_CCA_HOST="$ROOT/3.linux-cca-host"
+LINUX_CCA_REALM="$ROOT/4.linux-cca-realm"
+DTC="$ROOT/5.dtc"
+KVMTOOL="$ROOT/6.kvmtool"
 
 TOOLCHAINS="$ROOT/toolchains"
 FVP="$ROOT/fvp"
 OUT="$ROOT/out"
 SHARED_DIR="$OUT/shared_dir"
-INITRAMFS="$OUT/initramfs"
+INITRAMFS_HOST="$OUT/initramfs-host"
+INITRAMFS_REALM="$OUT/initramfs-realm"
 
 
 TF_RMM_REMOTE="https://git.trustedfirmware.org/TF-RMM/tf-rmm.git"
 TF_RMM_REV=origin/main
 TF_A_REMOTE="https://git.trustedfirmware.org/TF-A/trusted-firmware-a.git"
 TF_A_REV=origin/master
-OPTEE_BUILD_REMOTE="https://github.com/OP-TEE/build.git"
-OPTEE_BUILD_REV=origin/master
-LINUX_CCA_REMOTE="https://git.gitlab.arm.com/linux-arm/linux-cca.git"
-LINUX_CCA_REV=origin/cca-host/rfc-v1
+LINUX_CCA_HOST_REMOTE="https://git.gitlab.arm.com/linux-arm/linux-cca.git"
+LINUX_CCA_HOST_REV=origin/cca-host/rfc-v1
 LINUX_CCA_REALM_REMOTE="https://git.gitlab.arm.com/linux-arm/linux-cca.git"
 LINUX_CCA_REALM_REV=origin/cca-guest/rfc-v1
 DTC_REMOTE="git://git.kernel.org/pub/scm/utils/dtc/dtc.git"
@@ -114,8 +112,7 @@ function stop() {
 function init_clean() {
 	rm -rf "$TF_RMM"
 	rm -rf "$TF_A"
-	rm -rf "$OPTEE_BUILD"
-	rm -rf "$LINUX_CCA"
+	rm -rf "$LINUX_CCA_HOST"
 	rm -rf "$LINUX_CCA_REALM"
 	rm -rf "$DTC"
 	rm -rf "$KVMTOOL"
@@ -142,32 +139,22 @@ function init_tf_a() {
 	success ${FUNCNAME[0]}
 }
 
-function init_optee_build() {
+function init_linux_host() {
 	start ${FUNCNAME[0]}
-	git clone "$OPTEE_BUILD_REMOTE" "$OPTEE_BUILD"              || stop
-	pushd "$OPTEE_BUILD"
-	git checkout -t -b fvp-cca $OPTEE_BUILD_REV                 || stop
-	patch -p1 < "$PROVIDED/optee-build.patch"                   || stop
+	git clone "$LINUX_CCA_HOST_REMOTE" "$LINUX_CCA_HOST"        || stop
+	pushd "$LINUX_CCA_HOST"
+	git checkout -t -b fvp-cca $LINUX_CCA_HOST_REV              || stop
+	cp -v "$PROVIDED/config-linux-host" "$LINUX_CCA_HOST/.config"  || stop
 	popd
 	success ${FUNCNAME[0]}
 }
 
-function init_linux_cca() {
-	start ${FUNCNAME[0]}
-	git clone "$LINUX_CCA_REMOTE" "$LINUX_CCA"                  || stop
-	pushd "$LINUX_CCA"
-	git checkout -t -b fvp-cca $LINUX_CCA_REV                   || stop
-	cp -v "$PROVIDED/config-linux" "$LINUX_CCA/.config"         || stop
-	popd
-	success ${FUNCNAME[0]}
-}
-
-function init_linux_cca_realm() {
+function init_linux_realm() {
 	start ${FUNCNAME[0]}
 	git clone "$LINUX_CCA_REALM_REMOTE" "$LINUX_CCA_REALM"      || stop
 	pushd "$LINUX_CCA_REALM"
 	git checkout -t -b fvp-cca $LINUX_CCA_REALM_REV             || stop
-	cp -v "$PROVIDED/config-linux-realm" "$LINUX_CCA_REALM/.config" || stop
+	cp -v "$PROVIDED/config-linux-realm" "$LINUX_CCA_REALM/.config"  || stop
 	popd
 	success ${FUNCNAME[0]}
 }
@@ -198,9 +185,6 @@ function init_toolchains() {
 		wget "$LINK"                                            || stop
 		tar xf `basename "$LINK"`                               || stop
 	done
-	# Those symlinks are used by optee-build
-	ln -s `basename "$GCC_AARCH64_NONE_LINUX" | sed -e 's#\.tar\.xz##g'` aarch64 || stop
-	ln -s `basename "$GCC_ARM_NONE_LINUX" | sed -e 's#\.tar\.xz##g'` aarch32     || stop
 	popd
 	success ${FUNCNAME[0]}
 }
@@ -218,14 +202,16 @@ function init_fvp() {
 function init_out() {
 	start ${FUNCNAME[0]}
 	mkdir "$OUT"                                                || stop
+	mkdir "$INITRAMFS_HOST"                                     || stop
+	mkdir "$INITRAMFS_REALM"                                    || stop
 	mkdir "$SHARED_DIR"                                         || stop
-	mkdir "$INITRAMFS"                                          || stop
 	cp -v "$PROVIDED/config-fvp" "$OUT"                         || stop
 	cp -v "$PROVIDED/FVP_AARCH64_EFI.fd" "$OUT"                 || stop
+	cp -v "$PROVIDED/grub.cfg" "$OUT"                           || stop
 	cp -v "$PROVIDED/bootaa64.efi" "$OUT"                       || stop
-	cp -v "$PROVIDED/rootfs.tar.bz2" "$OUT"                     || stop
 	cp -v "$PROVIDED/run-lkvm.sh" "$SHARED_DIR"                 || stop
-	tar xf "$PROVIDED/initramfs-realm.tar.bz2" -C "$INITRAMFS"  || stop
+	tar xf "$PROVIDED/initramfs-host.tar.bz2" -C "$INITRAMFS_HOST"   || stop
+	tar xf "$PROVIDED/initramfs-realm.tar.bz2" -C "$INITRAMFS_REALM" || stop
 	success ${FUNCNAME[0]}
 }
 
@@ -233,9 +219,8 @@ function init() {
 	init_clean
 	init_tf_rmm
 	init_tf_a
-	init_optee_build
-	init_linux_cca
-	init_linux_cca_realm
+	init_linux_host
+	init_linux_realm
 	init_dtc
 	init_kvmtool
 	init_toolchains
@@ -278,14 +263,19 @@ function build_tf_a() {
 	success ${FUNCNAME[0]}
 }
 
-function build_linux_ns() {
+function build_linux_host() {
 	start ${FUNCNAME[0]}
-	pushd "$OPTEE_BUILD"
-	make -j8 -f fvp.mk linux                                    || stop
-	cp -fv "$LINUX_CCA/arch/arm64/boot/Image" "$OUT"            || stop
-	cp -fv "$LINUX_CCA/arch/arm64/boot/dts/arm/fvp-base-revc.dtb" "$OUT" || stop
-	make -j8 -f fvp.mk boot-img2                                || stop
+	save_path
+	export PATH="$GCC_AARCH64_NONE_LINUX_BIN:$PATH"
+	pushd "$LINUX_CCA_HOST"
+	make LOCALVERSION="" \
+		 CROSS_COMPILE="/usr/bin/ccache aarch64-none-linux-gnu-" \
+		 ARCH=arm64 \
+		 -j8                                                    || stop
+	cp -fv "$LINUX_CCA_HOST/arch/arm64/boot/Image" "$OUT"       || stop
+	cp -fv "$LINUX_CCA_HOST/arch/arm64/boot/dts/arm/fvp-base-revc.dtb" "$OUT" || stop
 	popd
+	restore_path
 	success ${FUNCNAME[0]}
 }
 
@@ -293,8 +283,9 @@ function build_linux_realm() {
 	start ${FUNCNAME[0]}
 	save_path
 	export PATH="$GCC_AARCH64_NONE_LINUX_BIN:$PATH"
- 	pushd "$LINUX_CCA_REALM"
- 	make CROSS_COMPILE=aarch64-none-linux-gnu- \
+	pushd "$LINUX_CCA_REALM"
+	make LOCALVERSION="" \
+		 CROSS_COMPILE="/usr/bin/ccache aarch64-none-linux-gnu-" \
 		 ARCH=arm64 \
 		 -j8                                                    || stop
 	cp -fv "$LINUX_CCA_REALM/arch/arm64/boot/Image" "$SHARED_DIR/Image.realm" || stop
@@ -324,9 +315,29 @@ function build_kvmtool() {
 	success ${FUNCNAME[0]}
 }
 
-function build_initramfs() {
+function build_root_host() {
 	start ${FUNCNAME[0]}
-	pushd "$INITRAMFS"
+	pushd "$INITRAMFS_HOST"
+	find . -print0 |                                                    \
+		cpio --null --create --verbose --format=newc |                  \
+		gzip --best > "$OUT/initramfs-host.cpio.gz"                     || stop
+	BOOT_IMG="$OUT/boot.img"
+	rm -f "$BOOT_IMG"                                                   || stop
+	mformat -i "$BOOT_IMG" -n 64 -h 2 -T 65536 -v "BOOT IMG" -C ::      || stop
+	mcopy -i "$BOOT_IMG" "$OUT/Image" ::                                || stop
+	mcopy -i "$BOOT_IMG" "$OUT/fvp-base-revc.dtb" ::                    || stop
+	mmd -i "$BOOT_IMG" ::/EFI                                           || stop
+	mmd -i "$BOOT_IMG" ::/EFI/BOOT                                      || stop
+	mcopy -i "$BOOT_IMG" "$OUT/initramfs-host.cpio.gz" ::               || stop
+	mcopy -i "$BOOT_IMG" "$OUT/bootaa64.efi" ::/EFI/BOOT                || stop
+	mcopy -i "$BOOT_IMG" "$OUT/grub.cfg" ::/EFI/BOOT                    || stop
+	popd
+	success ${FUNCNAME[0]}
+}
+
+function build_root_realm() {
+	start ${FUNCNAME[0]}
+	pushd "$INITRAMFS_REALM"
 	find . -print0 |                                         \
 		cpio --null --create --verbose --format=newc |       \
 		gzip --best > "$SHARED_DIR/initramfs-realm.cpio.gz"    || stop
@@ -344,11 +355,12 @@ function build() {
 
 	build_tf_rmm
 	build_tf_a
-	build_linux_ns
+	build_linux_host
 	build_linux_realm
 	build_libfdt
 	build_kvmtool
-	build_initramfs
+	build_root_host
+	build_root_realm
 }
 
 function run() {
@@ -371,9 +383,8 @@ Possible targets are:
   init_clean
   init_tf_rmm
   init_tf_a
-  init_optee_build
-  init_linux_cca
-  init_linux_cca_realm
+  init_linux_host
+  init_linux_realm
   init_dtc
   init_kvmtool
   init_toolchains
@@ -382,11 +393,12 @@ Possible targets are:
   init           (does all the inits above including clean)
   build_tf_rmm
   build_tf_a
-  build_linux_ns
+  build_linux_host
   build_linux_realm
   build_libfdt
   build_kvmtool
-  build_initramfs
+  build_root_host
+  build_root_realm
   build          (does all the builds above in the correct order)
   run
 

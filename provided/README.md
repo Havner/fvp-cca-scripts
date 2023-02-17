@@ -27,20 +27,19 @@ not dived deep into that. The one provided comes from islet precompiled assets.
 
 # Config files
 
-## optee-build.patch
+## grub.cfg
 
-A patch for the optee-build system (it creates the non secure kernel and image)
-for correct paths, image creation, grub config and the like.
+Config for grub for the non secure world. Based on optee provided one.
 
-## config-linux
+## config-linux-host
 
 Config for the linux kernel. Based on the one from islet with make oldconfig on
 newer kernel.
 
 ## config-linux-realm
 
-Config for the linux kernel running in real. Based on the one from islet with
-make oldconfig on newer kernel.
+Config for the linux kernel running in real. Based on defconfig with lots of
+unneeded drivers disabled.
 
 ## config-fvp
 
@@ -53,13 +52,13 @@ Script for running realm linux on lkvm.
 
 # Other
 
-## rootfs.tar.bz2
+## initramfs-host.tar.bz2
 
-Simple rootfs for the non secure host. Based on busybox. Also taken from islet
-for now. Might need to be reworked when we need some more tools inside. For now
-it does the job.
+Simple initramfs for the non secure host. Based on busybox. Also taken from
+islet for now. Might need to be reworked when we need some more tools
+inside. For now it does the job. It works as the main rootfs.
 
-## initramfs-busybox-aarch64.cpio.gz
+## initramfs-realm.tar.bz2
 
 Simple initramfs for the realm kernel. There is no root, initramfs should run
 some shell. Taken from islet.
