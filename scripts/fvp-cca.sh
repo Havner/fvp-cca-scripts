@@ -130,6 +130,7 @@ function init_tf_rmm() {
     git clone --recursive "$TF_RMM_REMOTE" "$TF_RMM"                    || stop
     pushd "$TF_RMM"
     git checkout --recurse-submodules -t -b fvp-cca $TF_RMM_REV         || stop
+    touch .projectile
     popd
     success ${FUNCNAME[0]}
 }
@@ -139,6 +140,7 @@ function init_tf_a() {
     git clone "$TF_A_REMOTE" "$TF_A"                                    || stop
     pushd "$TF_A"
     git checkout -t -b fvp-cca $TF_A_REV                                || stop
+    touch .projectile
     popd
     success ${FUNCNAME[0]}
 }
@@ -148,6 +150,7 @@ function init_linux_host() {
     git clone "$LINUX_CCA_HOST_REMOTE" "$LINUX_CCA_HOST"                || stop
     pushd "$LINUX_CCA_HOST"
     git checkout -t -b fvp-cca $LINUX_CCA_HOST_REV                      || stop
+    touch .projectile
     cp -v "$PROVIDED/config-linux-host" "$LINUX_CCA_HOST/.config"       || stop
     popd
     success ${FUNCNAME[0]}
@@ -158,6 +161,7 @@ function init_linux_realm() {
     git clone "$LINUX_CCA_REALM_REMOTE" "$LINUX_CCA_REALM"              || stop
     pushd "$LINUX_CCA_REALM"
     git checkout -t -b fvp-cca $LINUX_CCA_REALM_REV                     || stop
+    touch .projectile
     cp -v "$PROVIDED/config-linux-realm" "$LINUX_CCA_REALM/.config"     || stop
     popd
     success ${FUNCNAME[0]}
@@ -168,6 +172,7 @@ function init_dtc() {
     git clone "$DTC_REMOTE" "$DTC"                                      || stop
     pushd "$DTC"
     git checkout -t -b fvp-cca $DTC_REV                                 || stop
+    touch .projectile
     popd
     success ${FUNCNAME[0]}
 }
@@ -177,6 +182,7 @@ function init_kvmtool() {
     git clone "$KVMTOOL_REMOTE" "$KVMTOOL"                              || stop
     pushd "$KVMTOOL"
     git checkout -t -b fvp-cca $KVMTOOL_REV                             || stop
+    touch .projectile
     popd
     success ${FUNCNAME[0]}
 }
