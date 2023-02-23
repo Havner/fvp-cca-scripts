@@ -31,7 +31,7 @@ LINUX_CCA_REALM_REMOTE="https://git.gitlab.arm.com/linux-arm/linux-cca.git"
 LINUX_CCA_REALM_REV=origin/cca-full/rfc-v1
 DTC_REMOTE="git://git.kernel.org/pub/scm/utils/dtc/dtc.git"
 DTC_REV=origin/master
-KVMTOOL_REMOTE="https://gitlab.arm.com/linux-arm/kvmtool-cca"
+KVMTOOL_REMOTE="https://gitlab.arm.com/linux-arm/kvmtool-cca.git"
 KVMTOOL_REV=origin/cca/rfc-v1
 
 # https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads
