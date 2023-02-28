@@ -33,6 +33,8 @@ DTC_REMOTE="git://git.kernel.org/pub/scm/utils/dtc/dtc.git"
 DTC_REV=origin/master
 KVMTOOL_REMOTE="https://gitlab.arm.com/linux-arm/kvmtool-cca.git"
 KVMTOOL_REV=origin/cca/rfc-v1
+KVM_UNIT_TESTS_REMOTE="https://gitlab.arm.com/linux-arm/kvm-unit-tests-cca"
+KVM_UNIT_TESTS_REV=origin/cca/rfc-v1
 
 # https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads
 # for building tf-rmm and tf-a
