@@ -12,6 +12,7 @@ LINUX_CCA_HOST="$ROOT/3.linux-cca-host"
 LINUX_CCA_REALM="$ROOT/4.linux-cca-realm"
 DTC="$ROOT/5.dtc"
 KVMTOOL="$ROOT/6.kvmtool"
+KVM_UNIT_TESTS="$ROOT/7.kvm-unit-tests"
 
 TOOLCHAINS="$ROOT/toolchains"
 FVP="$ROOT/fvp"
@@ -189,6 +190,21 @@ function init_kvmtool() {
     success ${FUNCNAME[0]}
 }
 
+function init_kvm_unit_tests() {
+    start ${FUNCNAME[0]}
+    git clone "$KVM_UNIT_TESTS_REMOTE" "$KVM_UNIT_TESTS"                || stop
+    pushd "$KVM_UNIT_TESTS"
+    git checkout -t -b fvp-cca $KVM_UNIT_TESTS_REV                      || stop
+    git submodule update --init                                         || stop
+    touch .projectile
+    ./configure                                                         \
+        --arch=arm64                                                    \
+        --cross-prefix=aarch64-linux-gnu-                               \
+        --target=kvmtool                                                || stop
+    popd
+    success ${FUNCNAME[0]}
+}
+
 function init_toolchains() {
     start ${FUNCNAME[0]}
     mkdir "$TOOLCHAINS"                                                 || stop
@@ -235,6 +251,7 @@ function init() {
     init_linux_realm
     init_dtc
     init_kvmtool
+    init_kvm_unit_tests
     init_toolchains
     init_fvp
     init_out
@@ -327,6 +344,20 @@ function build_kvmtool() {
     success ${FUNCNAME[0]}
 }
 
+function build_kvm_unit_tests() {
+    start ${FUNCNAME[0]}
+    pushd "$KVM_UNIT_TESTS"
+    # this is built using cross compiler (gcc9) from ubuntu
+    make                                                                || stop
+    KVM_TESTS="$SHARED_DIR/kvm-tests"
+    rm -rf "$KVM_TESTS"                                                 || stop
+    mkdir "$KVM_TESTS"                                                  || stop
+    cp arm/*.flat arm/run-realm-tests "$KVM_TESTS"                      || stop
+    unset KVM_TESTS
+    popd
+    success ${FUNCNAME[0]}
+}
+
 function build_root_host() {
     start ${FUNCNAME[0]}
     pushd "$INITRAMFS_HOST"
@@ -371,6 +402,7 @@ function build() {
     build_linux_realm
     build_libfdt
     build_kvmtool
+    build_kvm_unit_tests
     build_root_host
     build_root_realm
 }
@@ -399,6 +431,7 @@ Possible targets are:
   init_linux_realm
   init_dtc
   init_kvmtool
+  init_kvm_unit_tests
   init_toolchains
   init_fvp
   init_out
@@ -409,6 +442,7 @@ Possible targets are:
   build_linux_realm
   build_libfdt
   build_kvmtool
+  build_kvm_unit_tests
   build_root_host
   build_root_realm
   build          (does all the builds above in the correct order)

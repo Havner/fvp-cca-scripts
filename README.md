@@ -64,6 +64,16 @@ Then:
 
 Also give it time. It takes a while to load.
 
+# Running kvm realm/rsi tests
+
+Login as 'root'
+
+Then:
+
+    # cd /shared/kvm-tests
+	# export LKVM=/shared/lkvm
+	# ./run-realm-tests
+
 # Other options
 
 Each step can be run on its own if there is a need:
@@ -79,6 +89,7 @@ Each step can be run on its own if there is a need:
       init_linux_realm
       init_dtc
       init_kvmtool
+	  init_kvm_unit_tests
       init_toolchains
       init_fvp
       init_out
@@ -89,6 +100,7 @@ Each step can be run on its own if there is a need:
       build_linux_realm
       build_libfdt
       build_kvmtool
+	  build_kvm_unit_tests
       build_root_host
       build_root_realm
       build          (does all the builds above in the correct order)
