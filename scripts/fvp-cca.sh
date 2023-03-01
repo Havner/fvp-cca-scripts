@@ -123,6 +123,7 @@ function init_clean() {
     rm -rf "$LINUX_CCA_REALM"
     rm -rf "$DTC"
     rm -rf "$KVMTOOL"
+    rm -rf "$KVM_UNIT_TESTS"
     rm -rf "$TOOLCHAINS"
     rm -rf "$FVP"
     rm -rf "$OUT"
