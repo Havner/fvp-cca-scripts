@@ -362,6 +362,7 @@ function build_kvm_unit_tests() {
     rm -rf "$KVM_TESTS"                                                 || stop
     mkdir "$KVM_TESTS"                                                  || stop
     cp arm/*.flat arm/run-realm-tests "$KVM_TESTS"                      || stop
+    sed -i -e "s#-lkvm#-/shared/lkvm#g#" "$KVM_TESTS/run-realm-tests"   || stop
     unset KVM_TESTS
     popd
     success ${FUNCNAME[0]}

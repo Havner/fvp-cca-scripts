@@ -79,7 +79,6 @@ Login as 'root'
 Then:
 
     # cd /shared/kvm-tests
-	# export LKVM=/shared/lkvm
 	# ./run-realm-tests
 
 # Other options
