@@ -212,7 +212,10 @@ function init_toolchains() {
     pushd "$TOOLCHAINS"
     for LINK in "$GCC_AARCH64_NONE_ELF" "$GCC_ARM_NONE_EABI" "$GCC_AARCH64_NONE_LINUX" "$GCC_ARM_NONE_LINUX"; do
         wget "$LINK"                                                    || stop
-        tar xf `basename "$LINK"`                                       || stop
+        FILELINK="`basename "$LINK"`"
+        echo "Unpacking $FILELINK"
+        tar xf "$FILELINK"                                              || stop
+        unset FILELINK
     done
     popd
     success ${FUNCNAME[0]}
@@ -223,7 +226,10 @@ function init_fvp() {
     mkdir "$FVP"                                                        || stop
     pushd "$FVP"
     wget "$FVP_BASE_REVC"                                               || stop
-    tar xf `basename "$FVP_BASE_REVC"`                                  || stop
+    FILELINK="`basename "$FVP_BASE_REVC"`"
+    echo "Unpacking $FILELINK"
+    tar xf "$FILELINK"                                                  || stop
+    unset FILELINK
     popd
     success ${FUNCNAME[0]}
 }
@@ -239,7 +245,9 @@ function init_out() {
     cp -v "$PROVIDED/grub.cfg" "$OUT"                                   || stop
     cp -v "$PROVIDED/bootaa64.efi" "$OUT"                               || stop
     cp -v "$PROVIDED/run-lkvm.sh" "$SHARED_DIR"                         || stop
+    echo "Unpacking $PROVIDED/initramfs-host.tar.bz2 -> $INITRAMFS_HOST"
     tar xf "$PROVIDED/initramfs-host.tar.bz2" -C "$INITRAMFS_HOST"      || stop
+    echo "Unpacking $PROVIDED/initramfs-realm.tar.bz2 -> $INITRAMFS_REALM"
     tar xf "$PROVIDED/initramfs-realm.tar.bz2" -C "$INITRAMFS_REALM"    || stop
     success ${FUNCNAME[0]}
 }
