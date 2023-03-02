@@ -26,6 +26,14 @@ Add the snap directory to your PATH so the newer cmake will be available:
 
     export PATH="/snap/bin:$PATH"
 
+# Space requirements
+
+You need around 20GB. Maybe a little bit more.
+
+- 14GB for init (it's possible to limit this significantly by doing shallow git)
+- 3GB for the build itself
+- 3GB for ccache
+
 # Initialization
 
     $ ./scripts/fvp-cca.sh init
