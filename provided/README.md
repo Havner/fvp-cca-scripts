@@ -50,6 +50,10 @@ work. This one is from islet.
 
 Script for running realm linux on lkvm.
 
+## hexdump.sh
+
+Script for simple byte for byte formatting for hexdump.
+
 # Other
 
 ## initramfs-host.tar.bz2
