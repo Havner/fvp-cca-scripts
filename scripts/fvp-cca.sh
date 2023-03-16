@@ -67,6 +67,15 @@ function restore_path() {
     unset OLDPATH
 }
 
+function cleanup_json() {
+    sed -i                          \
+        -e '/"-m/d'                 \
+        -e '/"-f/d'                 \
+        -e '/"-W/d'                 \
+        -e 's#".*gcc"#"gcc"#g'      \
+        compile_commands.json
+}
+
 GREEN='\033[1;32m'
 RED='\033[1;31m'
 BLUE='\033[1;34m'
@@ -275,7 +284,8 @@ function build_tf_rmm() {
     export CROSS_COMPILE=aarch64-none-elf-
     pushd "$TF_RMM"
     cmake -DRMM_CONFIG=fvp_defcfg -S . -B build/                        || stop
-    cmake --build build/                                                || stop
+    bear -a cmake --build build/                                        || stop
+    cleanup_json
     cp -fv "$TF_RMM/build/Release/rmm.img" "$OUT"                       || stop
     popd
     unset CROSS_COMPILE
@@ -288,7 +298,7 @@ function build_tf_a() {
     save_path
     export PATH="$GCC_AARCH64_NONE_ELF_BIN:$PATH"
     pushd "$TF_A"
-    make CROSS_COMPILE=aarch64-none-elf-                                \
+    bear -a make CROSS_COMPILE=aarch64-none-elf-                        \
          PLAT=fvp                                                       \
          ENABLE_RME=1                                                   \
          DEBUG=1                                                        \
@@ -296,6 +306,7 @@ function build_tf_a() {
          RMM="$OUT/rmm.img"                                             \
          BL33="$OUT/FVP_AARCH64_EFI.fd"                                 \
          all fip                                                        || stop
+    cleanup_json
     cp -fv "$TF_A/build/fvp/debug/bl1.bin" "$OUT"                       || stop
     cp -fv "$TF_A/build/fvp/debug/fip.bin" "$OUT"                       || stop
     popd
@@ -308,10 +319,11 @@ function build_linux_host() {
     save_path
     export PATH="$GCC_AARCH64_NONE_LINUX_BIN:$PATH"
     pushd "$LINUX_CCA_HOST"
-    make LOCALVERSION=""                                                \
+    bear -a make LOCALVERSION=""                                        \
          CROSS_COMPILE="/usr/bin/ccache aarch64-none-linux-gnu-"        \
          ARCH=arm64                                                     \
          -j8                                                            || stop
+    cleanup_json
     cp -fv "$LINUX_CCA_HOST/arch/arm64/boot/Image" "$OUT"               || stop
     cp -fv "$LINUX_CCA_HOST/arch/arm64/boot/dts/arm/fvp-base-revc.dtb" "$OUT" || stop
     popd
@@ -324,10 +336,11 @@ function build_linux_realm() {
     save_path
     export PATH="$GCC_AARCH64_NONE_LINUX_BIN:$PATH"
     pushd "$LINUX_CCA_REALM"
-    make LOCALVERSION=""                                                \
+    bear -a make LOCALVERSION=""                                        \
          CROSS_COMPILE="/usr/bin/ccache aarch64-none-linux-gnu-"        \
          ARCH=arm64                                                     \
          -j8                                                            || stop
+    cleanup_json
     cp -fv "$LINUX_CCA_REALM/arch/arm64/boot/Image" "$SHARED_DIR/Image.realm" || stop
     popd
     restore_path
@@ -338,7 +351,8 @@ function build_libfdt() {
     start ${FUNCNAME[0]}
     pushd "$DTC"
     # this is built using cross compiler (gcc9) from ubuntu
-    make CC=aarch64-linux-gnu-gcc libfdt                                || stop
+    bear -a make CC=aarch64-linux-gnu-gcc libfdt                        || stop
+    cleanup_json
     popd
     success ${FUNCNAME[0]}
 }
@@ -347,9 +361,10 @@ function build_kvmtool() {
     start ${FUNCNAME[0]}
     pushd "$KVMTOOL"
     # this is built using cross compiler (gcc9) from ubuntu, it crashes on gcc11 from arm
-    make CROSS_COMPILE=aarch64-linux-gnu-                               \
+    bear -a make CROSS_COMPILE=aarch64-linux-gnu-                       \
          ARCH=arm64                                                     \
          LIBFDT_DIR="$DTC/libfdt"                                       || stop
+    cleanup_json
     cp -fv "$KVMTOOL/lkvm" "$SHARED_DIR"                                || stop
     popd
     success ${FUNCNAME[0]}
@@ -359,7 +374,8 @@ function build_kvm_unit_tests() {
     start ${FUNCNAME[0]}
     pushd "$KVM_UNIT_TESTS"
     # this is built using cross compiler (gcc9) from ubuntu
-    make                                                                || stop
+    bear -a make                                                        || stop
+    cleanup_json
     KVM_TESTS="$SHARED_DIR/kvm-tests"
     rm -rf "$KVM_TESTS"                                                 || stop
     mkdir "$KVM_TESTS"                                                  || stop

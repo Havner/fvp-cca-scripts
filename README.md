@@ -18,7 +18,7 @@ than the one Ubuntu provides. Hence snap.
     wget https://git.trustedfirmware.org/TF-RMM/tf-rmm.git/plain/docs/requirements.txt
     pip3 install --upgrade pip
     pip3 install -r requirements.txt
-    sudo apt-get install crossbuild-essential-arm64
+    sudo apt-get install crossbuild-essential-arm64 ccache bear
 
 **IMPORTANT**
 
