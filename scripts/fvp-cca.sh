@@ -246,6 +246,7 @@ function init_out() {
     cp -v "$PROVIDED/bootaa64.efi" "$OUT"                               || stop
     cp -v "$PROVIDED/run-lkvm.sh" "$SHARED_DIR"                         || stop
     cp -v "$PROVIDED/hexdump.sh" "$SHARED_DIR"                          || stop
+    cp -v "$PROVIDED/module.sh" "$SHARED_DIR"                           || stop
     echo "Unpacking $PROVIDED/initramfs-host.tar.bz2 -> $INITRAMFS_HOST"
     tar xf "$PROVIDED/initramfs-host.tar.bz2" -C "$INITRAMFS_HOST"      || stop
     echo "Unpacking $PROVIDED/initramfs-realm.tar.bz2 -> $INITRAMFS_REALM"

@@ -54,6 +54,10 @@ Script for running realm linux on lkvm.
 
 Script for simple byte for byte formatting for hexdump.
 
+## module.sh
+
+Script to quickly reload the rsi kernel module.
+
 # Other
 
 ## initramfs-host.tar.bz2
