@@ -176,6 +176,7 @@ function init_linux_realm() {
     git checkout -t -b fvp-cca $LINUX_CCA_REALM_REV                     || stop
     touch .projectile
     cp -v "$PROVIDED/config-linux-realm" "$LINUX_CCA_REALM/.config"     || stop
+    patch -p1 < "$PROVIDED/linux-rsi-pages.patch"                       || stop
     popd
     success ${FUNCNAME[0]}
 }

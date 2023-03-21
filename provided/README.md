@@ -46,6 +46,10 @@ unneeded drivers disabled.
 Configuration for running the FVP. Tried one from TF-A docs but it didn't
 work. This one is from islet.
 
+## linux-rsi-pages.patch
+
+A patch that adds static variables inside kernel for few RSI calls to work.
+
 ## run-lkvm.sh
 
 Script for running realm linux on lkvm.
