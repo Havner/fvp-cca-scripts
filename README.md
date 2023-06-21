@@ -61,6 +61,10 @@ messages and on separate terminals do:
 
 The first one will show non secure world output, the second one will show RMM.
 
+Also this version requires RSS to communicate with FVP/TF-A on port 5002
+(UART2). Without it the TF-A will be locked on start waiting for reply to its
+PSA call. You can use: https://github.com/Havner/minirss
+
 # Running realm
 
 Login as 'root'

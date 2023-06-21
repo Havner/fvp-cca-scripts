@@ -24,8 +24,8 @@ INITRAMFS_REALM="$OUT/initramfs-realm"
 
 TF_RMM_REMOTE="https://git.trustedfirmware.org/TF-RMM/tf-rmm.git"
 TF_RMM_REV=origin/main
-TF_A_REMOTE="https://git.trustedfirmware.org/TF-A/trusted-firmware-a.git"
-TF_A_REV=origin/master
+TF_A_REMOTE="https://github.com/Havner/trusted-firmware-a.git"
+TF_A_REV=origin/fvp-cca
 LINUX_CCA_HOST_REMOTE="https://git.gitlab.arm.com/linux-arm/linux-cca.git"
 LINUX_CCA_HOST_REV=origin/cca-full/rfc-v1
 LINUX_CCA_REALM_REMOTE="https://git.gitlab.arm.com/linux-arm/linux-cca.git"
@@ -301,6 +301,8 @@ function build_tf_a() {
     pushd "$TF_A"
     bear -a make CROSS_COMPILE=aarch64-none-elf-                        \
          PLAT=fvp                                                       \
+         PLAT_RSS_NOT_SUPPORTED=0                                       \
+         PLAT_RSS_COMMS_USE_SERIAL=1                                    \
          ENABLE_RME=1                                                   \
          DEBUG=1                                                        \
          FVP_HW_CONFIG_DTS=fdts/fvp-base-gicv3-psci-1t.dts              \
