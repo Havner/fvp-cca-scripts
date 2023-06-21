@@ -484,26 +484,26 @@ Running without argument does:
 Initialization should be performed just once."
 }
 
-if [ "$#" -gt 1 ]; then
-    echo "Maximum of one argument is accepted."
-    echo "Run with -h or --help to see usage."
-    exit 1
-fi
-
 if [ "$1" == "-h" -o "$1" == "--help" ]; then
     usage
     exit 0
 fi
 
-if [[ "$1" = "init"* ]] || [[ "$1" = "build"* ]] || [ "$1" == "run" ]; then
-    eval "$1"
-elif [ "$1" ]; then
-    echo "Wrong argument passed."
-    echo "Run with -h or --help to see usage."
-    exit 1
-else
+if [ "$#" == 0 ]; then
     build
     run
+else
+    while (( "$#" )); do
+        echo $1
+        if [[ "$1" = "init"* ]] || [[ "$1" = "build"* ]] || [ "$1" == "run" ]; then
+            eval "$1"
+        elif [ "$1" ]; then
+            echo "Wrong argument passed."
+            echo "Run with -h or --help to see usage."
+            exit 1
+        fi
+        shift
+    done
 fi
 
 # Local Variables:
