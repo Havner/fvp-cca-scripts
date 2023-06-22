@@ -9,6 +9,7 @@ bp.pl011_uart3.unbuffered_output=1
 bp.refcounter.non_arch_start_at_default=1
 bp.refcounter.use_real_time=0
 bp.terminal_1.start_telnet=false
+bp.terminal_2.start_telnet=false
 bp.ve_sysregs.exit_on_shutdown=1
 bp.virtio_net.hostbridge.userNetworking=true
 bp.virtio_net.hostbridge.userNetPorts=5004=5004
