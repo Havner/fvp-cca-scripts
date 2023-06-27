@@ -7,6 +7,7 @@ SCRIPTS="$ROOT/scripts"
 PROVIDED="$ROOT/provided"
 
 TF_RMM="$ROOT/1.tf-rmm"
+MBEDTLS="$ROOT/2.mbedtls"
 TF_A="$ROOT/2.tf-a"
 LINUX_CCA_HOST="$ROOT/3.linux-cca-host"
 LINUX_CCA_REALM="$ROOT/4.linux-cca-realm"
@@ -24,6 +25,8 @@ INITRAMFS_REALM="$OUT/initramfs-realm"
 
 TF_RMM_REMOTE="https://git.trustedfirmware.org/TF-RMM/tf-rmm.git"
 TF_RMM_REV=origin/main
+MBEDTLS_REMOTE="https://github.com/Mbed-TLS/mbedtls.git"
+MBEDTLS_REV=mbedtls-3.4.0
 TF_A_REMOTE="https://github.com/Havner/trusted-firmware-a.git"
 TF_A_REV=origin/fvp-cca
 LINUX_CCA_HOST_REMOTE="https://git.gitlab.arm.com/linux-arm/linux-cca.git"
@@ -150,6 +153,11 @@ function init_tf_rmm() {
 
 function init_tf_a() {
     start ${FUNCNAME[0]}
+    git clone "$MBEDTLS_REMOTE" "$MBEDTLS"                              || stop
+    pushd "$MBEDTLS"
+    git checkout -b fvp-cca $MBEDTLS_REV                                || stop
+    touch .projectile
+    popd
     git clone "$TF_A_REMOTE" "$TF_A"                                    || stop
     pushd "$TF_A"
     git checkout -t -b fvp-cca $TF_A_REV                                || stop
@@ -304,14 +312,16 @@ function build_tf_a() {
          PLAT_RSS_NOT_SUPPORTED=0                                       \
          PLAT_RSS_COMMS_USE_SERIAL=1                                    \
          ENABLE_RME=1                                                   \
-         DEBUG=1                                                        \
+         MEASURED_BOOT=1                                                \
+         MBEDTLS_DIR=../2.mbedtls                                       \
+         ENABLE_MPAM_FOR_LOWER_ELS=0                                    \
          FVP_HW_CONFIG_DTS=fdts/fvp-base-gicv3-psci-1t.dts              \
          RMM="$OUT/rmm.img"                                             \
          BL33="$OUT/FVP_AARCH64_EFI.fd"                                 \
          all fip                                                        || stop
     cleanup_json
-    cp -fv "$TF_A/build/fvp/debug/bl1.bin" "$OUT"                       || stop
-    cp -fv "$TF_A/build/fvp/debug/fip.bin" "$OUT"                       || stop
+    cp -fv "$TF_A/build/fvp/release/bl1.bin" "$OUT"                     || stop
+    cp -fv "$TF_A/build/fvp/release/fip.bin" "$OUT"                     || stop
     popd
     restore_path
     success ${FUNCNAME[0]}
