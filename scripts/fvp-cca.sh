@@ -23,8 +23,8 @@ INITRAMFS_HOST="$OUT/initramfs-host"
 INITRAMFS_REALM="$OUT/initramfs-realm"
 
 
-TF_RMM_REMOTE="https://git.trustedfirmware.org/TF-RMM/tf-rmm.git"
-TF_RMM_REV=origin/main
+TF_RMM_REMOTE="https://github.com/Havner/trusted-firmware-rmm.git"
+TF_RMM_REV=origin/fvp-cca
 MBEDTLS_REMOTE="https://github.com/Mbed-TLS/mbedtls.git"
 MBEDTLS_REV=mbedtls-3.4.0
 TF_A_REMOTE="https://github.com/Havner/trusted-firmware-a.git"
@@ -292,7 +292,7 @@ function build_tf_rmm() {
     export PATH="$GCC_AARCH64_NONE_ELF_BIN:$PATH"
     export CROSS_COMPILE=aarch64-none-elf-
     pushd "$TF_RMM"
-    cmake -DRMM_CONFIG=fvp_defcfg -S . -B build/                        || stop
+    cmake -DRMM_CONFIG=fvp_defcfg -DRMM_PRINT_RIM=1 -S . -B build/      || stop
     bear -a cmake --build build/                                        || stop
     cleanup_json
     cp -fv "$TF_RMM/build/Release/rmm.img" "$OUT"                       || stop
