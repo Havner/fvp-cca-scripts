@@ -13,9 +13,9 @@ bp.refcounter.use_real_time=0
 bp.terminal_1.start_telnet=false
 bp.terminal_2.start_telnet=false
 bp.ve_sysregs.exit_on_shutdown=1
-bp.virtio_net.hostbridge.userNetworking=true
-bp.virtio_net.hostbridge.userNetPorts=5004=5004
 bp.virtio_net.enabled=true
+bp.virtio_net.hostbridge.interfaceName=cca0
+bp.smsc_91c111.enabled=1
 cache_state_modelled=0
 cluster0.NUM_CORES=4
 cluster0.PA_SIZE=48

@@ -461,6 +461,36 @@ function run() {
     popd
 }
 
+function net_start() {
+    ip a show cca0 > /dev/null 2>&1
+    if [ "$?" == 0 ]; then
+        echo "Network already started"
+        exit 1
+    fi
+
+    sudo ip tuntap add dev cca0 mode tap user $USER
+    sudo ip link set dev cca0 up
+    sudo ip addr add 192.168.30.1/24 dev cca0
+
+    echo 1 | sudo tee /proc/sys/net/ipv4/ip_forward
+    sudo iptables -t nat -A POSTROUTING -j MASQUERADE -s 192.168.30.0/24
+}
+
+function net_stop() {
+    ip a show cca0 > /dev/null 2>&1
+    if [ "$?" == 1 ]; then
+        echo "Network already stopped"
+        exit 1
+    fi
+
+    sudo iptables -t nat -D POSTROUTING -j MASQUERADE -s 192.168.30.0/24
+    echo 0 | sudo tee /proc/sys/net/ipv4/ip_forward
+
+    sudo ip addr del 192.168.30.1/24 dev cca0
+    sudo ip link set dev cca0 down
+    sudo ip tuntap del dev cca0 mode tap
+}
+
 function usage() {
     echo "Run with a target function name for what you intend to do.
 
@@ -489,6 +519,9 @@ Possible targets are:
   build          (does all the builds above in the correct order)
   run
 
+  net_start      (requires root/sudo, allows to connect to FVP/realm)
+  net_stop       (requires root/sudo, cleans up after net_start)
+
 Running without argument does:
   build
   run
@@ -507,7 +540,7 @@ if [ "$#" == 0 ]; then
 else
     while (( "$#" )); do
         echo $1
-        if [[ "$1" = "init"* ]] || [[ "$1" = "build"* ]] || [ "$1" == "run" ]; then
+        if [[ "$1" = "init"* ]] || [[ "$1" = "build"* ]] || [[ "$1" = "net"* ]] || [ "$1" == "run" ]; then
             eval "$1"
         elif [ "$1" ]; then
             echo "Wrong argument passed."
