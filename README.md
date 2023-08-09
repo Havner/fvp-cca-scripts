@@ -85,6 +85,48 @@ Then:
     # cd /shared/kvm-tests
 	# ./run-realm-tests
 
+# Network
+
+Network for FVP and Realm is configured automatically. To make use of it however
+one needs to configure the host machine *before* running FVP. This is done with:
+
+    $ ./scripts/fvp-cca.sh net_start
+
+It will be done with sudo so expect the command to ask for a password. The
+command 'net_stop' cleans that configuration.
+
+That command configures a tap interface named cca0 and its address. It also
+configures MASQUERADE for the FVP so the network from FVP (and from Realm) can
+reach internet. The host's address is: 192.168.30.1. The FVP address is
+192.168.30.2. FVP starts telnetd automatically so it's possible to telnet to
+192.168.30.2 with root account without password to reach FVP machine.
+
+On FVP machine, the lkvm that starts the Realm also configures tap0 device with
+an address 192.168.33.1. The Realm will have address 192.168.33.2. MASQUERADE is
+also configured so the Realm can access internet. DNS will not work though,
+probably due to lack of glibc on the Realm (and as a consequence due to the lack
+of DNS functions).
+
+Realm also has a telnetd started so you can telnet to the Realm from FVP with
+its address. No password required, it will drop directly to shell. FVP also has
+a DNAT configured so you can telnet directly to the Realm from the host with
+'telnet 192.168.30.2 2323'.
+
+Summary of useful commands from the host:
+
+    $ ./scripts/fvp-cca.sh net_start
+	$ telnet 192.168.30.2
+	$ telnet 192.168.30.2 2323
+
+Summary of useful commands from the FVP:
+
+    # ping -c 4 samsung.com
+	# telnet 192.168.33.2
+
+Summary of useful commands from the Realm:
+
+    # ping -c 4 8.8.8.8
+
 # Other options
 
 Each step can be run on its own if there is a need:
@@ -116,6 +158,9 @@ Each step can be run on its own if there is a need:
       build_root_realm
       build          (does all the builds above in the correct order)
       run
+
+      net_start      (requires root/sudo, allows to connect to FVP/realm)
+      net_stop       (requires root/sudo, cleans up after net_start)
 
     Running without argument does:
       build
