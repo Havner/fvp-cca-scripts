@@ -12,6 +12,7 @@
        -k Image.realm                                                   \
        -i initramfs-realm.cpio.gz                                       \
        -p "earlycon=ttyS0 printk.devkmsg=on"                            \
+       -n virtio                                                        \
        --9p /shared,FMR                                                 \
        "$@"
 
