@@ -72,7 +72,7 @@ Login as 'root'
 Then:
 
     # cd /shared
-    # ./run-lkvm.sh
+    # ./realm.sh
 
 Also give it time. It takes a while to load.
 

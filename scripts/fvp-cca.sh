@@ -262,7 +262,7 @@ function init_out() {
     cp -v "$PROVIDED/FVP_AARCH64_EFI.fd" "$OUT"                         || stop
     cp -v "$PROVIDED/grub.cfg" "$OUT"                                   || stop
     cp -v "$PROVIDED/bootaa64.efi" "$OUT"                               || stop
-    cp -v "$PROVIDED/run-lkvm.sh" "$SHARED_DIR"                         || stop
+    cp -v "$PROVIDED/realm.sh" "$SHARED_DIR"                            || stop
     cp -v "$PROVIDED/hexdump.sh" "$SHARED_DIR"                          || stop
     cp -v "$PROVIDED/module.sh" "$SHARED_DIR"                           || stop
     echo "Unpacking $PROVIDED/initramfs-host.tar.bz2 -> $INITRAMFS_HOST"

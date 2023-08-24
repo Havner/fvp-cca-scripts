@@ -50,7 +50,7 @@ work. This one is from islet.
 
 A patch that adds static variables inside kernel for few RSI calls to work.
 
-## run-lkvm.sh
+## realm.sh
 
 Script for running realm linux on lkvm.
 
