@@ -130,6 +130,7 @@ function init_clean() {
     color_none
 
     rm -rf "$TF_RMM"
+    rm -rf "$MBEDTLS"
     rm -rf "$TF_A"
     rm -rf "$LINUX_CCA_HOST"
     rm -rf "$LINUX_CCA_REALM"
@@ -273,7 +274,11 @@ function init_out() {
 }
 
 function init() {
-    init_clean
+    color_green
+    echo "If the command fails with some directory \"already exists and is not an empty directory\""
+    echo "It means you already did an init or at least started it. Do init_clean before init."
+    color_none
+
     init_tf_rmm
     init_tf_a
     init_linux_host
@@ -506,7 +511,7 @@ Possible targets are:
   init_toolchains
   init_fvp
   init_out
-  init           (does all the inits above including clean)
+  init           (does all the inits above excluding clean)
   build_tf_rmm
   build_tf_a
   build_linux_host
