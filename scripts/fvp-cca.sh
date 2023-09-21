@@ -24,21 +24,21 @@ INITRAMFS_REALM="$OUT/initramfs-realm"
 
 
 TF_RMM_REMOTE="https://github.com/Havner/trusted-firmware-rmm.git"
-TF_RMM_REV=origin/fvp-cca
+TF_RMM_REV=origin/eac2
 MBEDTLS_REMOTE="https://github.com/Mbed-TLS/mbedtls.git"
-MBEDTLS_REV=mbedtls-3.4.0
+MBEDTLS_REV=mbedtls-3.4.1
 TF_A_REMOTE="https://github.com/Havner/trusted-firmware-a.git"
-TF_A_REV=origin/fvp-cca
+TF_A_REV=origin/eac2
 LINUX_CCA_HOST_REMOTE="https://git.gitlab.arm.com/linux-arm/linux-cca.git"
-LINUX_CCA_HOST_REV=origin/cca-full/rfc-v1
+LINUX_CCA_HOST_REV=origin/cca-full/rmm-v1.0-eac2
 LINUX_CCA_REALM_REMOTE="https://git.gitlab.arm.com/linux-arm/linux-cca.git"
-LINUX_CCA_REALM_REV=origin/cca-full/rfc-v1
+LINUX_CCA_REALM_REV=origin/cca-full/rmm-v1.0-eac2
 DTC_REMOTE="git://git.kernel.org/pub/scm/utils/dtc/dtc.git"
 DTC_REV=origin/master
 KVMTOOL_REMOTE="https://github.com/Havner/kvmtool-cca.git"
-KVMTOOL_REV=origin/fvp-cca
+KVMTOOL_REV=origin/eac2
 KVM_UNIT_TESTS_REMOTE="https://gitlab.arm.com/linux-arm/kvm-unit-tests-cca"
-KVM_UNIT_TESTS_REV=origin/cca/rfc-v1
+KVM_UNIT_TESTS_REV=origin/cca/rmm-v1.0-eac2
 
 # https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads
 # for building tf-rmm and tf-a
@@ -59,6 +59,8 @@ GCC_ARM_NONE_LINUX_BIN=`gcc_print_bin "$GCC_ARM_NONE_LINUX"`
 
 FVP_BASE_REVC=https://developer.arm.com/-/media/Files/downloads/ecosystem-models/FVP_Base_RevC-2xAEMvA_11.18_16_Linux64.tgz
 FVP_SUBDIR=Base_RevC_AEMvA_pkg/models/Linux64_GCC-9.3
+
+FVP_BRANCH=fvp-cca-eac2
 
 
 function save_path() {
@@ -146,7 +148,7 @@ function init_tf_rmm() {
     start ${FUNCNAME[0]}
     git clone --recursive "$TF_RMM_REMOTE" "$TF_RMM"                    || stop
     pushd "$TF_RMM"
-    git checkout --recurse-submodules -t -b fvp-cca $TF_RMM_REV         || stop
+    git checkout --recurse-submodules -t -b $FVP_BRANCH $TF_RMM_REV     || stop
     touch .projectile
     popd
     success ${FUNCNAME[0]}
@@ -156,12 +158,12 @@ function init_tf_a() {
     start ${FUNCNAME[0]}
     git clone "$MBEDTLS_REMOTE" "$MBEDTLS"                              || stop
     pushd "$MBEDTLS"
-    git checkout -b fvp-cca $MBEDTLS_REV                                || stop
+    git checkout -b $FVP_BRANCH $MBEDTLS_REV                            || stop
     touch .projectile
     popd
     git clone "$TF_A_REMOTE" "$TF_A"                                    || stop
     pushd "$TF_A"
-    git checkout -t -b fvp-cca $TF_A_REV                                || stop
+    git checkout -t -b $FVP_BRANCH $TF_A_REV                            || stop
     touch .projectile
     popd
     success ${FUNCNAME[0]}
@@ -171,7 +173,7 @@ function init_linux_host() {
     start ${FUNCNAME[0]}
     git clone "$LINUX_CCA_HOST_REMOTE" "$LINUX_CCA_HOST"                || stop
     pushd "$LINUX_CCA_HOST"
-    git checkout -t -b fvp-cca $LINUX_CCA_HOST_REV                      || stop
+    git checkout -t -b $FVP_BRANCH $LINUX_CCA_HOST_REV                  || stop
     touch .projectile
     cp -v "$PROVIDED/config-linux-host" "$LINUX_CCA_HOST/.config"       || stop
     popd
@@ -182,7 +184,7 @@ function init_linux_realm() {
     start ${FUNCNAME[0]}
     git clone "$LINUX_CCA_REALM_REMOTE" "$LINUX_CCA_REALM"              || stop
     pushd "$LINUX_CCA_REALM"
-    git checkout -t -b fvp-cca $LINUX_CCA_REALM_REV                     || stop
+    git checkout -t -b $FVP_BRANCH $LINUX_CCA_REALM_REV                 || stop
     touch .projectile
     cp -v "$PROVIDED/config-linux-realm" "$LINUX_CCA_REALM/.config"     || stop
     patch -p1 < "$PROVIDED/linux-rsi-pages.patch"                       || stop
@@ -194,7 +196,7 @@ function init_dtc() {
     start ${FUNCNAME[0]}
     git clone "$DTC_REMOTE" "$DTC"                                      || stop
     pushd "$DTC"
-    git checkout -t -b fvp-cca $DTC_REV                                 || stop
+    git checkout -t -b $FVP_BRANCH $DTC_REV                             || stop
     touch .projectile
     popd
     success ${FUNCNAME[0]}
@@ -204,7 +206,7 @@ function init_kvmtool() {
     start ${FUNCNAME[0]}
     git clone "$KVMTOOL_REMOTE" "$KVMTOOL"                              || stop
     pushd "$KVMTOOL"
-    git checkout -t -b fvp-cca $KVMTOOL_REV                             || stop
+    git checkout -t -b $FVP_BRANCH $KVMTOOL_REV                         || stop
     touch .projectile
     popd
     success ${FUNCNAME[0]}
@@ -214,7 +216,7 @@ function init_kvm_unit_tests() {
     start ${FUNCNAME[0]}
     git clone "$KVM_UNIT_TESTS_REMOTE" "$KVM_UNIT_TESTS"                || stop
     pushd "$KVM_UNIT_TESTS"
-    git checkout -t -b fvp-cca $KVM_UNIT_TESTS_REV                      || stop
+    git checkout -t -b $FVP_BRANCH $KVM_UNIT_TESTS_REV                  || stop
     git submodule update --init                                         || stop
     touch .projectile
     ./configure                                                         \
@@ -312,6 +314,10 @@ function build_tf_a() {
     save_path
     export PATH="$GCC_AARCH64_NONE_ELF_BIN:$PATH"
     pushd "$TF_A"
+    # The ENABLE_*=0 lines are so BL31 can fit into the memory.
+    # Refer to 2.tf-a/plat/arm/board/fvp/platform.mk:27
+    # The disabled are chosen arbitrarily by trial and error so
+    # BL31 fits into the memory and still somehow works (hopefully).
     bear -a make CROSS_COMPILE=aarch64-none-elf-                        \
          PLAT=fvp                                                       \
          PLAT_RSS_NOT_SUPPORTED=0                                       \
@@ -319,10 +325,16 @@ function build_tf_a() {
          ENABLE_RME=1                                                   \
          MEASURED_BOOT=1                                                \
          MBEDTLS_DIR=../2.mbedtls                                       \
-         ENABLE_MPAM_FOR_LOWER_ELS=0                                    \
          FVP_HW_CONFIG_DTS=fdts/fvp-base-gicv3-psci-1t.dts              \
          RMM="$OUT/rmm.img"                                             \
          BL33="$OUT/FVP_AARCH64_EFI.fd"                                 \
+         ENABLE_FEAT_AMUv1p1=0                                          \
+         ENABLE_MPAM_FOR_LOWER_ELS=0                                    \
+         ENABLE_FEAT_GCS=0                                              \
+         ENABLE_FEAT_RAS=0                                              \
+         ENABLE_TRBE_FOR_NS=0                                           \
+         ENABLE_SYS_REG_TRACE_FOR_NS=0                                  \
+         ENABLE_TRF_FOR_NS=0                                            \
          all fip                                                        || stop
     cleanup_json
     cp -fv "$TF_A/build/fvp/release/bl1.bin" "$OUT"                     || stop
@@ -448,7 +460,7 @@ function build() {
     build_linux_realm
     build_libfdt
     build_kvmtool
-    build_kvm_unit_tests
+    #build_kvm_unit_tests
     build_root_host
     build_root_realm
 }
