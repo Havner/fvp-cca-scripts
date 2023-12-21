@@ -1,11 +1,14 @@
 #!/bin/bash
 
+#set -x
+
 SCRIPTS="`dirname $0`"
 ROOT="`realpath $SCRIPTS/..`"
 
 SCRIPTS="$ROOT/scripts"
 PROVIDED="$ROOT/provided"
 
+EDK2="$ROOT/0.edk2"
 TF_RMM="$ROOT/1.tf-rmm"
 MBEDTLS="$ROOT/2.mbedtls"
 TF_A="$ROOT/2.tf-a"
@@ -17,26 +20,28 @@ KVM_UNIT_TESTS="$ROOT/7.kvm-unit-tests"
 
 TOOLCHAINS="$ROOT/toolchains"
 FVP="$ROOT/fvp"
+QEMU="$ROOT/qemu"
 OUT="$ROOT/out"
 SHARED_DIR="$OUT/shared_dir"
 INITRAMFS_HOST="$OUT/initramfs-host"
 INITRAMFS_REALM="$OUT/initramfs-realm"
 
-
-TF_RMM_REMOTE="https://github.com/Havner/trusted-firmware-rmm.git"
-TF_RMM_REV=origin/fvp-cca
+EDK2_REMOTE=https://github.com/tianocore/edk2.git
+EDK2_REV=master
+TF_RMM_REMOTE="https://jpbrucker.net/git/rmm"
+TF_RMM_REV=origin/qemu-rme
 MBEDTLS_REMOTE="https://github.com/Mbed-TLS/mbedtls.git"
 MBEDTLS_REV=mbedtls-3.4.0
-TF_A_REMOTE="https://github.com/Havner/trusted-firmware-a.git"
-TF_A_REV=origin/fvp-cca
+TF_A_REMOTE="https://jpbrucker.net/git/tf-a"
+TF_A_REV=origin/qemu-rme
 LINUX_CCA_HOST_REMOTE="https://git.gitlab.arm.com/linux-arm/linux-cca.git"
-LINUX_CCA_HOST_REV=origin/cca-full/rfc-v1
+LINUX_CCA_HOST_REV=origin/cca-full/rmm-v1.0-eac2
 LINUX_CCA_REALM_REMOTE="https://git.gitlab.arm.com/linux-arm/linux-cca.git"
-LINUX_CCA_REALM_REV=origin/cca-full/rfc-v1
+LINUX_CCA_REALM_REV=origin/cca-full/rmm-v1.0-eac2
 DTC_REMOTE="git://git.kernel.org/pub/scm/utils/dtc/dtc.git"
 DTC_REV=origin/master
 KVMTOOL_REMOTE="https://github.com/Havner/kvmtool-cca.git"
-KVMTOOL_REV=origin/fvp-cca
+KVMTOOL_REV=origin/fvp-cca-2
 KVM_UNIT_TESTS_REMOTE="https://gitlab.arm.com/linux-arm/kvm-unit-tests-cca"
 KVM_UNIT_TESTS_REV=origin/cca/rfc-v1
 
@@ -59,6 +64,9 @@ GCC_ARM_NONE_LINUX_BIN=`gcc_print_bin "$GCC_ARM_NONE_LINUX"`
 
 FVP_BASE_REVC=https://developer.arm.com/-/media/Files/downloads/ecosystem-models/FVP_Base_RevC-2xAEMvA_11.18_16_Linux64.tgz
 FVP_SUBDIR=Base_RevC_AEMvA_pkg/models/Linux64_GCC-9.3
+QEMU_REMOTE=https://gitlab.com/qemu-project/qemu.git
+QEMU_REV=master
+QEMU_BIN="$QEMU/build/qemu-system-aarch64"
 
 
 function save_path() {
@@ -129,6 +137,7 @@ function init_clean() {
     echo "Starting from scratch..."
     color_none
 
+    rm -rf "$EDK2"
     rm -rf "$TF_RMM"
     rm -rf "$MBEDTLS"
     rm -rf "$TF_A"
@@ -142,11 +151,22 @@ function init_clean() {
     rm -rf "$OUT"
 }
 
+function init_edk2() {
+    start ${FUNCNAME[0]}
+    git clone --recursive "$EDK2_REMOTE" "$EDK2"                        || stop
+    pushd "$EDK2"
+    git checkout --recurse-submodules -t -b fvp-cca $EDK2_REV           || stop
+    touch .projectile
+    popd
+    success ${FUNCNAME[0]}
+}
+
 function init_tf_rmm() {
     start ${FUNCNAME[0]}
     git clone --recursive "$TF_RMM_REMOTE" "$TF_RMM"                    || stop
     pushd "$TF_RMM"
-    git checkout --recurse-submodules -t -b fvp-cca $TF_RMM_REV         || stop
+    git checkout -t -b fvp-cca $TF_RMM_REV                              || stop
+    git submodule update --init --recursive                             || stop
     touch .projectile
     popd
     success ${FUNCNAME[0]}
@@ -253,6 +273,18 @@ function init_fvp() {
     success ${FUNCNAME[0]}
 }
 
+function init_qemu() {
+    start ${FUNCNAME[0]}
+    git clone "$QEMU_REMOTE" "$QEMU"                                    || stop
+    pushd "$QEMU"
+    git checkout -t -b fvp-cca $QEMU_REV                                || stop
+    git submodule update --init --recursive                             || stop
+    ./configure --target-list=aarch64-softmmu                           || stop
+    touch .projectile
+    popd
+    success ${FUNCNAME[0]}
+}
+
 function init_out() {
     start ${FUNCNAME[0]}
     mkdir "$OUT"                                                        || stop
@@ -261,6 +293,7 @@ function init_out() {
     mkdir "$SHARED_DIR"                                                 || stop
     cp -v "$PROVIDED/config-fvp" "$OUT"                                 || stop
     cp -v "$PROVIDED/FVP_AARCH64_EFI.fd" "$OUT"                         || stop
+    cp -v "$PROVIDED/QEMU_EFI.fd" "$OUT"                                || stop
     cp -v "$PROVIDED/grub.cfg" "$OUT"                                   || stop
     cp -v "$PROVIDED/bootaa64.efi" "$OUT"                               || stop
     cp -v "$PROVIDED/realm.sh" "$SHARED_DIR"                            || stop
@@ -279,6 +312,7 @@ function init() {
     echo "It means you already did an init or at least started it. Do init_clean before init."
     color_none
 
+    init_edk2
     init_tf_rmm
     init_tf_a
     init_linux_host
@@ -288,7 +322,21 @@ function init() {
     init_kvm_unit_tests
     init_toolchains
     init_fvp
+    init_qemu
     init_out
+}
+
+# FIXME
+function build_edk2() {
+    start ${FUNCNAME[0]}
+    pushd "$EDK2"
+    source edksetup.sh
+    make -j -C BaseTools                                                || stop
+    export GCC5_AARCH64_PREFIX=aarch64-linux-gnu-
+    bash build -b RELEASE -a AARCH64 -t GCC5 -p ArmVirtPkg/ArmVirtQemuKernel.dcs || stop
+    popd
+    unset GCC5_AARCH64_PREFIX
+    success ${FUNCNAME[0]}
 }
 
 function build_tf_rmm() {
@@ -297,10 +345,14 @@ function build_tf_rmm() {
     export PATH="$GCC_AARCH64_NONE_ELF_BIN:$PATH"
     export CROSS_COMPILE=aarch64-none-elf-
     pushd "$TF_RMM"
-    cmake -DRMM_CONFIG=fvp_defcfg -DRMM_PRINT_RIM=1 -S . -B build/      || stop
+    cmake                                                               \
+        -DRMM_CONFIG=qemu_virt_defcfg                                   \
+        -DCMAKE_BUILD_TYPE=Debug                                        \
+        -S .                                                            \
+        -B build/                                                       || stop
     bear -a cmake --build build/                                        || stop
     cleanup_json
-    cp -fv "$TF_RMM/build/Release/rmm.img" "$OUT"                       || stop
+    cp -fv "$TF_RMM/build/Debug/rmm.img" "$OUT"                         || stop
     popd
     unset CROSS_COMPILE
     restore_path
@@ -313,20 +365,20 @@ function build_tf_a() {
     export PATH="$GCC_AARCH64_NONE_ELF_BIN:$PATH"
     pushd "$TF_A"
     bear -a make CROSS_COMPILE=aarch64-none-elf-                        \
-         PLAT=fvp                                                       \
-         PLAT_RSS_NOT_SUPPORTED=0                                       \
-         PLAT_RSS_COMMS_USE_SERIAL=1                                    \
+         PLAT=qemu                                                      \
+         QEMU_USE_GIC_DRIVER=QEMU_GICV3                                 \
          ENABLE_RME=1                                                   \
-         MEASURED_BOOT=1                                                \
-         MBEDTLS_DIR=../2.mbedtls                                       \
-         ENABLE_MPAM_FOR_LOWER_ELS=0                                    \
-         FVP_HW_CONFIG_DTS=fdts/fvp-base-gicv3-psci-1t.dts              \
+         DEBUG=1                                                        \
+         LOG_LEVEL=40                                                   \
          RMM="$OUT/rmm.img"                                             \
-         BL33="$OUT/FVP_AARCH64_EFI.fd"                                 \
+         BL33="$OUT/QEMU_EFI.fd"                                        \
          all fip                                                        || stop
     cleanup_json
-    cp -fv "$TF_A/build/fvp/release/bl1.bin" "$OUT"                     || stop
-    cp -fv "$TF_A/build/fvp/release/fip.bin" "$OUT"                     || stop
+    dd if="$TF_A/build/qemu/debug/bl1.bin" of="$TF_A/flash.bin"         || stop
+    dd if="$TF_A/build/qemu/debug/fip.bin" of="$TF_A/flash.bin" seek=64 bs=4096 || stop
+    #cp -fv "$TF_A/build/fvp/release/bl1.bin" "$OUT"                     || stop
+    #cp -fv "$TF_A/build/fvp/release/fip.bin" "$OUT"                     || stop
+    cp -fv "$TF_A/flash.bin" "$OUT"                                     || stop
     popd
     restore_path
     success ${FUNCNAME[0]}
@@ -434,6 +486,15 @@ function build_root_realm() {
     success ${FUNCNAME[0]}
 }
 
+function build_qemu() {
+    start ${FUNCNAME[0]}
+    pushd "$QEMU"
+    bear make -j8                                                       || stop
+    cleanup_json
+    popd
+    success ${FUNCNAME[0]}
+}
+
 function build() {
     if [ ! -d "$OUT" ]; then
         color_red
@@ -451,6 +512,7 @@ function build() {
     build_kvm_unit_tests
     build_root_host
     build_root_realm
+    build_qemu
 }
 
 function run() {
@@ -464,6 +526,21 @@ function run() {
         -C bp.virtioblockdevice.image_path="$OUT/boot.img"              \
         -C bp.virtiop9device.root_path="$SHARED_DIR"                    || stop
     popd
+}
+
+function run_qemu() {
+    start ${FUNCNAME[0]}
+    $QEMU_BIN                                                           \
+        -M virt,virtualization=on,secure=on,gic-version=3 \
+        -M acpi=off -cpu max,x-rme=on,sme=off -m 3G -smp 8 \
+        -nographic \
+        -bios "$OUT/flash.bin" \
+        -kernel "$OUT/Image" \
+        -initrd "$OUT/initramfs-host.cpio.gz" \
+        -device virtio-net-pci,netdev=net0 \
+        -netdev tap,id=net0,ifname=cca0,script=no \
+        -device virtio-9p-device,fsdev=shr0,mount_tag=FM \
+        -fsdev local,security_model=none,path="$SHARED_DIR",id=shr0
 }
 
 function net_start() {
@@ -545,7 +622,7 @@ if [ "$#" == 0 ]; then
 else
     while (( "$#" )); do
         echo $1
-        if [[ "$1" = "init"* ]] || [[ "$1" = "build"* ]] || [[ "$1" = "net"* ]] || [ "$1" == "run" ]; then
+        if [[ "$1" = "init"* ]] || [[ "$1" = "build"* ]] || [[ "$1" = "net"* ]] || [[ "$1" == "run"* ]]; then
             eval "$1"
         elif [ "$1" ]; then
             echo "Wrong argument passed."
