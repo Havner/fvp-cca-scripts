@@ -24,21 +24,21 @@ INITRAMFS_REALM="$OUT/initramfs-realm"
 
 
 TF_RMM_REMOTE="https://github.com/Havner/trusted-firmware-rmm.git"
-TF_RMM_REV=origin/eac2
+TF_RMM_REV=origin/eac5
 MBEDTLS_REMOTE="https://github.com/Mbed-TLS/mbedtls.git"
 MBEDTLS_REV=mbedtls-3.4.1
 TF_A_REMOTE="https://github.com/Havner/trusted-firmware-a.git"
-TF_A_REV=origin/eac2
+TF_A_REV=origin/eac5
 LINUX_CCA_HOST_REMOTE="https://git.gitlab.arm.com/linux-arm/linux-cca.git"
-LINUX_CCA_HOST_REV=origin/cca-full/rmm-v1.0-eac2
+LINUX_CCA_HOST_REV=origin/cca-full/rmm-v1.0-eac5
 LINUX_CCA_REALM_REMOTE="https://git.gitlab.arm.com/linux-arm/linux-cca.git"
-LINUX_CCA_REALM_REV=origin/cca-full/rmm-v1.0-eac2
+LINUX_CCA_REALM_REV=origin/cca-full/rmm-v1.0-eac5
 DTC_REMOTE="git://git.kernel.org/pub/scm/utils/dtc/dtc.git"
 DTC_REV=origin/master
 KVMTOOL_REMOTE="https://github.com/Havner/kvmtool-cca.git"
-KVMTOOL_REV=origin/eac2
+KVMTOOL_REV=origin/eac5
 KVM_UNIT_TESTS_REMOTE="https://gitlab.arm.com/linux-arm/kvm-unit-tests-cca"
-KVM_UNIT_TESTS_REV=origin/cca/rmm-v1.0-eac2
+KVM_UNIT_TESTS_REV=origin/cca/rmm-v1.0-eac5
 
 # https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads
 # for building tf-rmm and tf-a
@@ -60,7 +60,7 @@ GCC_ARM_NONE_LINUX_BIN=`gcc_print_bin "$GCC_ARM_NONE_LINUX"`
 FVP_BASE_REVC=https://developer.arm.com/-/media/Files/downloads/ecosystem-models/FVP_Base_RevC-2xAEMvA_11.18_16_Linux64.tgz
 FVP_SUBDIR=Base_RevC_AEMvA_pkg/models/Linux64_GCC-9.3
 
-FVP_BRANCH=fvp-cca-eac2
+FVP_BRANCH=fvp-cca-eac5
 
 
 function save_path() {
@@ -299,7 +299,11 @@ function build_tf_rmm() {
     export PATH="$GCC_AARCH64_NONE_ELF_BIN:$PATH"
     export CROSS_COMPILE=aarch64-none-elf-
     pushd "$TF_RMM"
-    cmake -DRMM_CONFIG=fvp_defcfg -DRMM_PRINT_RIM=1 -S . -B build/      || stop
+    cmake                                                               \
+        -DRMM_CONFIG=fvp_defcfg                                         \
+        -DRMM_PRINT_RIM=1                                               \
+        -DLOG_LEVEL=40                                                  \
+        -S . -B build/                                                  || stop
     bear -a cmake --build build/                                        || stop
     cleanup_json
     cp -fv "$TF_RMM/build/Release/rmm.img" "$OUT"                       || stop
@@ -328,13 +332,6 @@ function build_tf_a() {
          FVP_HW_CONFIG_DTS=fdts/fvp-base-gicv3-psci-1t.dts              \
          RMM="$OUT/rmm.img"                                             \
          BL33="$OUT/FVP_AARCH64_EFI.fd"                                 \
-         ENABLE_FEAT_AMUv1p1=0                                          \
-         ENABLE_MPAM_FOR_LOWER_ELS=0                                    \
-         ENABLE_FEAT_GCS=0                                              \
-         ENABLE_FEAT_RAS=0                                              \
-         ENABLE_TRBE_FOR_NS=0                                           \
-         ENABLE_SYS_REG_TRACE_FOR_NS=0                                  \
-         ENABLE_TRF_FOR_NS=0                                            \
          all fip                                                        || stop
     cleanup_json
     cp -fv "$TF_A/build/fvp/release/bl1.bin" "$OUT"                     || stop
@@ -460,7 +457,7 @@ function build() {
     build_linux_realm
     build_libfdt
     build_kvmtool
-    #build_kvm_unit_tests
+    build_kvm_unit_tests
     build_root_host
     build_root_realm
 }
