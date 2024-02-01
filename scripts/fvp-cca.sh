@@ -324,7 +324,6 @@ function build_tf_a() {
     # BL31 fits into the memory and still somehow works (hopefully).
     bear -a make CROSS_COMPILE=aarch64-none-elf-                        \
          PLAT=fvp                                                       \
-         PLAT_RSS_NOT_SUPPORTED=0                                       \
          PLAT_RSS_COMMS_USE_SERIAL=1                                    \
          ENABLE_RME=1                                                   \
          MEASURED_BOOT=1                                                \
@@ -332,6 +331,17 @@ function build_tf_a() {
          FVP_HW_CONFIG_DTS=fdts/fvp-base-gicv3-psci-1t.dts              \
          RMM="$OUT/rmm.img"                                             \
          BL33="$OUT/FVP_AARCH64_EFI.fd"                                 \
+         ENABLE_FEAT_AMUv1p1=0                                          \
+         ENABLE_MPAM_FOR_LOWER_ELS=0                                    \
+         ENABLE_FEAT_GCS=0                                              \
+         ENABLE_FEAT_RAS=0                                              \
+         ENABLE_TRBE_FOR_NS=0                                           \
+         ENABLE_SYS_REG_TRACE_FOR_NS=0                                  \
+         ENABLE_TRF_FOR_NS=0                                            \
+         ENABLE_FEAT_S2PIE=0                                            \
+         ENABLE_FEAT_S1PIE=0                                            \
+         ENABLE_FEAT_S2POE=0                                            \
+         ENABLE_FEAT_S1POE=0                                            \
          all fip                                                        || stop
     cleanup_json
     cp -fv "$TF_A/build/fvp/release/bl1.bin" "$OUT"                     || stop
