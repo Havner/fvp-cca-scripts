@@ -1,5 +1,13 @@
 #!/bin/bash
 
+
+# the following is a configuration, it only affects builds, init does all
+
+USE_RSS=0
+
+# end of configuration
+
+
 SCRIPTS="`dirname $0`"
 ROOT="`realpath $SCRIPTS/..`"
 
@@ -10,6 +18,7 @@ EDK2="$ROOT/0.edk2"
 TF_RMM="$ROOT/1.tf-rmm"
 MBEDTLS="$ROOT/2.mbedtls"
 TF_A="$ROOT/2.tf-a"
+TF_A_RSS="$ROOT/2.tf-a-rss"
 LINUX_CCA_HOST="$ROOT/3.linux-cca-host"
 LINUX_CCA_REALM="$ROOT/4.linux-cca-realm"
 DTC="$ROOT/5.dtc"
@@ -34,6 +43,8 @@ MBEDTLS_REMOTE="https://github.com/Mbed-TLS/mbedtls.git"
 MBEDTLS_REV=mbedtls-3.4.1
 TF_A_REMOTE="https://github.com/Havner/trusted-firmware-a.git"
 TF_A_REV=origin/eac5
+TF_A_RSS_REMOTE="https://github.com/Havner/trusted-firmware-a.git"
+TF_A_RSS_REV=origin/eac5-rss
 LINUX_CCA_HOST_REMOTE="https://git.gitlab.arm.com/linux-arm/linux-cca.git"
 LINUX_CCA_HOST_REV=origin/cca-full/rmm-v1.0-eac5
 LINUX_CCA_REALM_REMOTE="https://git.gitlab.arm.com/linux-arm/linux-cca.git"
@@ -188,6 +199,11 @@ function init_tf_a() {
     git clone "$TF_A_REMOTE" "$TF_A"                                    || stop
     pushd "$TF_A"
     git checkout -t -b $FVP_BRANCH $TF_A_REV                            || stop
+    touch .projectile
+    popd
+    git clone "$TF_A_RSS_REMOTE" "$TF_A_RSS"                            || stop
+    pushd "$TF_A_RSS"
+    git checkout -t -b $FVP_BRANCH $TF_A_RSS_REV                        || stop
     touch .projectile
     popd
     success ${FUNCNAME[0]}
@@ -356,39 +372,49 @@ function build_tf_rmm() {
     success ${FUNCNAME[0]}
 }
 
+
+# The ENABLE_*=0 lines are so BL31 can fit into the memory.
+# Refer to 2.tf-a/plat/arm/board/fvp/platform.mk:27
+# The disabled are chosen arbitrarily by trial and error so
+# BL31 fits into the memory and still somehow works (hopefully).
+TF_A_OPTS_RSS="PLAT_RSS_COMMS_USE_SERIAL=1       \
+               ENABLE_FEAT_AMUv1p1=0             \
+               ENABLE_MPAM_FOR_LOWER_ELS=0       \
+               ENABLE_FEAT_GCS=0                 \
+               ENABLE_FEAT_RAS=0                 \
+               ENABLE_TRBE_FOR_NS=0              \
+               ENABLE_SYS_REG_TRACE_FOR_NS=0     \
+               ENABLE_TRF_FOR_NS=0               \
+               ENABLE_FEAT_S2PIE=0               \
+               ENABLE_FEAT_S1PIE=0               \
+               ENABLE_FEAT_S2POE=0               \
+               ENABLE_FEAT_S1POE=0"
+
 function build_tf_a() {
     start ${FUNCNAME[0]}
     save_path
     export PATH="$GCC_AARCH64_NONE_ELF_BIN:$PATH"
-    pushd "$TF_A"
-    # The ENABLE_*=0 lines are so BL31 can fit into the memory.
-    # Refer to 2.tf-a/plat/arm/board/fvp/platform.mk:27
-    # The disabled are chosen arbitrarily by trial and error so
-    # BL31 fits into the memory and still somehow works (hopefully).
+    if [ "$USE_RSS" -ne 0 ]; then
+        TF_A_DIR="$TF_A_RSS"
+        TF_A_OPTS="$TF_A_OPTS_RSS"
+    else
+        TF_A_DIR="$TF_A"
+        TF_A_OPTS=""
+    fi
+    pushd "$TF_A_DIR"
     bear -a make CROSS_COMPILE=aarch64-none-elf-                        \
          PLAT=fvp                                                       \
-         PLAT_RSS_COMMS_USE_SERIAL=1                                    \
          ENABLE_RME=1                                                   \
          MEASURED_BOOT=1                                                \
          MBEDTLS_DIR=../2.mbedtls                                       \
          FVP_HW_CONFIG_DTS=fdts/fvp-base-gicv3-psci-1t.dts              \
          RMM="$OUT/rmm.img"                                             \
          BL33="$OUT/FVP_AARCH64_EFI.fd"                                 \
-         ENABLE_FEAT_AMUv1p1=0                                          \
-         ENABLE_MPAM_FOR_LOWER_ELS=0                                    \
-         ENABLE_FEAT_GCS=0                                              \
-         ENABLE_FEAT_RAS=0                                              \
-         ENABLE_TRBE_FOR_NS=0                                           \
-         ENABLE_SYS_REG_TRACE_FOR_NS=0                                  \
-         ENABLE_TRF_FOR_NS=0                                            \
-         ENABLE_FEAT_S2PIE=0                                            \
-         ENABLE_FEAT_S1PIE=0                                            \
-         ENABLE_FEAT_S2POE=0                                            \
-         ENABLE_FEAT_S1POE=0                                            \
+         $TF_A_OPTS                                                     \
          all fip                                                        || stop
     cleanup_json
-    cp -fv "$TF_A/build/fvp/release/bl1.bin" "$OUT"                     || stop
-    cp -fv "$TF_A/build/fvp/release/fip.bin" "$OUT"                     || stop
+    cp -fv "$TF_A_DIR/build/fvp/release/bl1.bin" "$OUT"                 || stop
+    cp -fv "$TF_A_DIR/build/fvp/release/fip.bin" "$OUT"                 || stop
     popd
     restore_path
     success ${FUNCNAME[0]}
