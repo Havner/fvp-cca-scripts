@@ -5,6 +5,20 @@
 
 USE_RSS=0
 
+while (( "$#" )); do
+    case $1 in
+        "--rss")
+            USE_RSS=1
+            ;;
+    esac
+
+    if [[ $1 == --* ]]; then
+        shift 1
+    else
+        break
+    fi
+done
+
 # end of configuration
 
 
