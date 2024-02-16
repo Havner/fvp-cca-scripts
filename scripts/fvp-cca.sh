@@ -6,6 +6,7 @@ ROOT="`realpath $SCRIPTS/..`"
 SCRIPTS="$ROOT/scripts"
 PROVIDED="$ROOT/provided"
 
+EDK2="$ROOT/0.edk2"
 TF_RMM="$ROOT/1.tf-rmm"
 MBEDTLS="$ROOT/2.mbedtls"
 TF_A="$ROOT/2.tf-a"
@@ -23,6 +24,10 @@ INITRAMFS_HOST="$OUT/initramfs-host"
 INITRAMFS_REALM="$OUT/initramfs-realm"
 
 
+EDK2_MAIN_REMOTE=https://github.com/tianocore/edk2.git
+EDK2_MAIN_REV=master
+EDK2_PLATFORMS_REMOTE=https://github.com/tianocore/edk2-platforms
+EDK2_PLATFORMS_REV=master
 TF_RMM_REMOTE="https://github.com/Havner/trusted-firmware-rmm.git"
 TF_RMM_REV=origin/eac5
 MBEDTLS_REMOTE="https://github.com/Mbed-TLS/mbedtls.git"
@@ -131,6 +136,7 @@ function init_clean() {
     echo "Starting from scratch..."
     color_none
 
+    rm -rf "$EDK2"
     rm -rf "$TF_RMM"
     rm -rf "$MBEDTLS"
     rm -rf "$TF_A"
@@ -142,6 +148,24 @@ function init_clean() {
     rm -rf "$TOOLCHAINS"
     rm -rf "$FVP"
     rm -rf "$OUT"
+}
+
+function init_edk2() {
+    start ${FUNCNAME[0]}
+    mkdir -p "$EDK2"
+    pushd "$EDK2"
+    git clone --recursive "$EDK2_MAIN_REMOTE"                           || stop
+    pushd edk2
+    git checkout --recurse-submodules -t -b fvp-cca $EDK2_MAIN_REV      || stop
+    touch .projectile
+    popd
+    git clone --recursive "$EDK2_PLATFORMS_REMOTE"                      || stop
+    pushd edk2-platforms
+    git checkout --recurse-submodules -t -b fvp-cca $EDK2_PLATFORMS_REV || stop
+    touch .projectile
+    popd
+    popd
+    success ${FUNCNAME[0]}
 }
 
 function init_tf_rmm() {
@@ -262,7 +286,6 @@ function init_out() {
     mkdir "$INITRAMFS_REALM"                                            || stop
     mkdir "$SHARED_DIR"                                                 || stop
     cp -v "$PROVIDED/config-fvp" "$OUT"                                 || stop
-    cp -v "$PROVIDED/FVP_AARCH64_EFI.fd" "$OUT"                         || stop
     cp -v "$PROVIDED/grub.cfg" "$OUT"                                   || stop
     cp -v "$PROVIDED/bootaa64.efi" "$OUT"                               || stop
     cp -v "$PROVIDED/realm.sh" "$SHARED_DIR"                            || stop
@@ -281,6 +304,7 @@ function init() {
     echo "It means you already did an init or at least started it. Do init_clean before init."
     color_none
 
+    init_edk2
     init_tf_rmm
     init_tf_a
     init_linux_host
@@ -291,6 +315,25 @@ function init() {
     init_toolchains
     init_fvp
     init_out
+}
+
+function build_edk2() {
+    start ${FUNCNAME[0]}
+    pushd "$EDK2"
+    export WORKSPACE="$EDK2"
+    export PACKAGES_PATH="$EDK2/edk2:$EDK2/edk2-platforms"
+    source edk2/edksetup.sh
+    make -C edk2/BaseTools                                              || stop
+    export GCC5_AARCH64_PREFIX=aarch64-linux-gnu-
+    bash build -b RELEASE -a AARCH64 -t GCC5 -p Platform/ARM/VExpressPkg/ArmVExpress-FVP-AArch64.dsc || stop
+    cp -v "Build/ArmVExpress-FVP-AArch64/RELEASE_GCC5/FV/FVP_AARCH64_EFI.fd" "$OUT" || stop
+    unset GCC5_AARCH64_PREFIX
+    unset WORKSPACE
+    unset PACKAGES_PATH
+    unset EDK_TOOLS_PATH
+    unset CONF_PATH
+    popd
+    success ${FUNCNAME[0]}
 }
 
 function build_tf_rmm() {
@@ -461,6 +504,7 @@ function build() {
         exit 1
     fi
 
+    build_edk2
     build_tf_rmm
     build_tf_a
     build_linux_host
@@ -520,6 +564,7 @@ function usage() {
 
 Possible targets are:
   init_clean
+  init_edk2
   init_tf_rmm
   init_tf_a
   init_linux_host
@@ -531,6 +576,7 @@ Possible targets are:
   init_fvp
   init_out
   init           (does all the inits above excluding clean)
+  build_edk2
   build_tf_rmm
   build_tf_a
   build_linux_host
