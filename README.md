@@ -127,7 +127,28 @@ Summary of useful commands from the Realm:
 
     # ping -c 4 8.8.8.8
 
-# Other options
+# Additional options
+
+Some other command line options are supported:
+
+    --rss
+
+This causes the TF-A to be built with support HES/RSS through serial. This
+requires manually lanuching camellia-hes-host-app or some minirss to talk to
+TF-A through said serial.
+
+    --qemu
+
+Uses QEMU instead of FVP to emulate the host. All the outputs
+(QEMU/TF-A/EFI/TF-RMM) will be sent on the main terminal so no telnets
+necessary. Runs and works faster than FVP. Network is configured in the same
+way.
+
+Those options must be specified before any commands.
+
+QEMU and RSS don't work together at the moment.
+
+# Other commands
 
 Each step can be run on its own if there is a need:
 
