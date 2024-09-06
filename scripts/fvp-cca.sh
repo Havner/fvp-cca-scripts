@@ -562,6 +562,7 @@ function build_kvmtool() {
     pushd "$KVMTOOL"
     # this is built using cross compiler (gcc9) from ubuntu, it crashes on gcc11 from arm
     bear --append -- make CROSS_COMPILE=aarch64-linux-gnu-              \
+         LDFLAGS=-static                                                \
          ARCH=arm64                                                     \
          LIBFDT_DIR="$DTC/libfdt"                                       || stop
     cleanup_json
