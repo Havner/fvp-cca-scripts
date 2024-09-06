@@ -440,7 +440,7 @@ function build_tf_rmm() {
         -DRMM_PRINT_RIM=1                                               \
         -DLOG_LEVEL=40                                                  \
         -S . -B build/                                                  || stop
-    bear -a cmake --build build/                                        || stop
+    bear --append -- cmake --build build/                               || stop
     cleanup_json
     cp -fv "$TF_RMM_DIR/build/Release/rmm.img" "$OUT"                   || stop
     popd
@@ -494,7 +494,7 @@ function build_tf_a() {
     save_path
     export PATH="$GCC_AARCH64_NONE_ELF_BIN:$PATH"
     pushd "$TF_A_DIR"
-    bear -a make CROSS_COMPILE=aarch64-none-elf-                        \
+    bear --append -- make CROSS_COMPILE=aarch64-none-elf-               \
          ENABLE_RME=1                                                   \
          MBEDTLS_DIR=../2.mbedtls                                       \
          RMM="$OUT/rmm.img"                                             \
@@ -519,7 +519,7 @@ function build_linux_host() {
     save_path
     export PATH="$GCC_AARCH64_NONE_LINUX_BIN:$PATH"
     pushd "$LINUX_CCA_HOST"
-    bear -a make LOCALVERSION=""                                        \
+    bear --append -- make LOCALVERSION=""                               \
          CROSS_COMPILE="/usr/bin/ccache aarch64-none-linux-gnu-"        \
          ARCH=arm64                                                     \
          -j8                                                            || stop
@@ -536,7 +536,7 @@ function build_linux_realm() {
     save_path
     export PATH="$GCC_AARCH64_NONE_LINUX_BIN:$PATH"
     pushd "$LINUX_CCA_REALM"
-    bear -a make LOCALVERSION=""                                        \
+    bear --append -- make LOCALVERSION=""                               \
          CROSS_COMPILE="/usr/bin/ccache aarch64-none-linux-gnu-"        \
          ARCH=arm64                                                     \
          -j8                                                            || stop
@@ -551,7 +551,7 @@ function build_libfdt() {
     start ${FUNCNAME[0]}
     pushd "$DTC"
     # this is built using cross compiler (gcc9) from ubuntu
-    bear -a make CC=aarch64-linux-gnu-gcc libfdt                        || stop
+    bear --append -- make CC=aarch64-linux-gnu-gcc libfdt               || stop
     cleanup_json
     popd
     success ${FUNCNAME[0]}
@@ -561,7 +561,7 @@ function build_kvmtool() {
     start ${FUNCNAME[0]}
     pushd "$KVMTOOL"
     # this is built using cross compiler (gcc9) from ubuntu, it crashes on gcc11 from arm
-    bear -a make CROSS_COMPILE=aarch64-linux-gnu-                       \
+    bear --append -- make CROSS_COMPILE=aarch64-linux-gnu-              \
          ARCH=arm64                                                     \
          LIBFDT_DIR="$DTC/libfdt"                                       || stop
     cleanup_json
@@ -574,7 +574,7 @@ function build_kvm_unit_tests() {
     start ${FUNCNAME[0]}
     pushd "$KVM_UNIT_TESTS"
     # this is built using cross compiler (gcc9) from ubuntu
-    bear -a make                                                        || stop
+    bear --append -- make                                               || stop
     cleanup_json
     KVM_TESTS="$SHARED_DIR/kvm-tests"
     rm -rf "$KVM_TESTS"                                                 || stop
