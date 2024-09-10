@@ -595,7 +595,7 @@ function build_root_host() {
         gzip --best > "$OUT/initramfs-host.cpio.gz"                     || stop
     BOOT_IMG="$OUT/boot.img"
     rm -f "$BOOT_IMG"                                                   || stop
-    mformat -i "$BOOT_IMG" -n 64 -h 2 -T 65536 -v "BOOT IMG" -C ::      || stop
+    mformat -i "$BOOT_IMG" -n 64 -h 2 -T 1048576 -v "BOOT IMG" -C ::    || stop
     mcopy -i "$BOOT_IMG" "$OUT/Image" ::                                || stop
     mcopy -i "$BOOT_IMG" "$OUT/fvp-base-revc.dtb" ::                    || stop
     mmd -i "$BOOT_IMG" ::/EFI                                           || stop
