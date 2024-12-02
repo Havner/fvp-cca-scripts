@@ -620,7 +620,7 @@ function build_root_realm() {
 function build_qemu() {
     start ${FUNCNAME[0]}
     pushd "$QEMU"
-    bear make -j8                                                       || stop
+    bear --append -- make -j8                                           || stop
     cleanup_json
     popd
     success ${FUNCNAME[0]}
