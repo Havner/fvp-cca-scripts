@@ -107,7 +107,7 @@ FVP_BASE_REVC=https://developer.arm.com/-/media/Files/downloads/ecosystem-models
 FVP_SUBDIR=Base_RevC_AEMvA_pkg/models/Linux64_GCC-9.3
 
 QEMU_REMOTE=https://gitlab.com/qemu-project/qemu.git
-QEMU_REV=master
+QEMU_REV=b1e880789bc7dc07617e45e2d63d635cdbf2bf6d
 QEMU_BIN="$QEMU/build/qemu-system-aarch64"
 
 FVP_BRANCH=fvp-cca-eac5
