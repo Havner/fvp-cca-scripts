@@ -107,7 +107,7 @@ FVP_BASE_REVC=https://developer.arm.com/-/media/Files/downloads/ecosystem-models
 FVP_SUBDIR=Base_RevC_AEMvA_pkg/models/Linux64_GCC-9.3
 
 QEMU_REMOTE=https://gitlab.com/qemu-project/qemu.git
-QEMU_REV=master
+QEMU_REV=b1e880789bc7dc07617e45e2d63d635cdbf2bf6d
 QEMU_BIN="$QEMU/build/qemu-system-aarch64"
 
 FVP_BRANCH=fvp-cca-eac5
@@ -345,7 +345,7 @@ function init_qemu() {
     start ${FUNCNAME[0]}
     git clone "$QEMU_REMOTE" "$QEMU"                                    || stop
     pushd "$QEMU"
-    git checkout -t -b $FVP_BRANCH $QEMU_REV                            || stop
+    git checkout -b $FVP_BRANCH $QEMU_REV                               || stop
     git submodule update --init --recursive                             || stop
     ./configure --target-list=aarch64-softmmu                           || stop
     touch .projectile
