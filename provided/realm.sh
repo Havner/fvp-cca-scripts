@@ -15,6 +15,7 @@ cd /shared
        -i initramfs-realm.cpio.gz                                       \
        -p "earlycon=ttyS0 printk.devkmsg=on"                            \
        -n virtio                                                        \
+       --restricted_mem                                                 \
        --9p /shared,FMR                                                 \
        "$@"
 
