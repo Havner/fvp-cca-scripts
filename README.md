@@ -10,14 +10,12 @@ https://tf-rmm.readthedocs.io/en/latest/getting_started/getting-started.html#pac
 Also cross compilation tools are needed for libfdt/kvmtool:
 crossbuild-essential-arm64.
 
-A quick summary for Ubuntu 20.04 (might not be complete). You need newer cmake
+A quick summary for Ubuntu 22.04 (might not be complete). You need newer cmake
 than the one Ubuntu provides. Hence snap.
 
     sudo apt-get install -y git build-essential python3 python3-pip make ninja-build device-tree-compiler
-    sudo snap install cmake
-    wget https://git.trustedfirmware.org/TF-RMM/tf-rmm.git/plain/docs/requirements.txt
     pip3 install --upgrade pip
-    pip3 install -r requirements.txt
+    pip3 install -r provided/requirements.txt
     sudo apt-get install crossbuild-essential-arm64 ccache bear
 
 **IMPORTANT**
