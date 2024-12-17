@@ -183,8 +183,11 @@ function init_clean() {
 
     rm -rf "$EDK2"
     rm -rf "$TF_RMM"
+    rm -rf "$TF_RMM_QEMU"
     rm -rf "$MBEDTLS"
     rm -rf "$TF_A"
+    rm -rf "$TF_A_RSS"
+    rm -rf "$TF_A_QEMU"
     rm -rf "$LINUX_CCA_HOST"
     rm -rf "$LINUX_CCA_REALM"
     rm -rf "$DTC"
@@ -192,6 +195,7 @@ function init_clean() {
     rm -rf "$KVM_UNIT_TESTS"
     rm -rf "$TOOLCHAINS"
     rm -rf "$FVP"
+    rm -rf "$QEMU"
     rm -rf "$OUT"
 }
 
