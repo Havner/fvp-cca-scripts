@@ -9,12 +9,13 @@ cd /shared
        --disable-sve                                                    \
        --console serial                                                 \
        --irqchip=gicv3                                                  \
-       -m 256M                                                          \
-       -c 1                                                             \
+       -m 2G                                                            \
+       -c 2                                                             \
        -k Image.realm                                                   \
        -i initramfs-realm.cpio.gz                                       \
        -p "earlycon=ttyS0 printk.devkmsg=on"                            \
        -n virtio                                                        \
+       --restricted_mem                                                 \
        --9p /shared,FMR                                                 \
        "$@"
 

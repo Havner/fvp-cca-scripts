@@ -65,24 +65,24 @@ EDK2_PLATFORMS_REMOTE=https://github.com/tianocore/edk2-platforms
 EDK2_PLATFORMS_REV=master
 TF_RMM_REMOTE="https://github.com/Havner/trusted-firmware-rmm.git"
 TF_RMM_REV=origin/eac5
-TF_RMM_QEMU_REMOTE="https://jpbrucker.net/git/rmm"
-TF_RMM_QEMU_REV=origin/cca/rmm-v1.0-eac5
+TF_RMM_QEMU_REMOTE="https://git.codelinaro.org/linaro/dcap/rmm.git"
+TF_RMM_QEMU_REV=origin/cca/v4
 MBEDTLS_REMOTE="https://github.com/Mbed-TLS/mbedtls.git"
 MBEDTLS_REV=mbedtls-3.4.1
 TF_A_REMOTE="https://github.com/Havner/trusted-firmware-a.git"
 TF_A_REV=origin/eac5
 TF_A_RSS_REMOTE="https://github.com/Havner/trusted-firmware-a.git"
 TF_A_RSS_REV=origin/eac5-rss
-TF_A_QEMU_REMOTE="https://jpbrucker.net/git/tf-a"
-TF_A_QEMU_REV=origin/cca/rmm-v1.0-eac5
+TF_A_QEMU_REMOTE="https://git.codelinaro.org/linaro/dcap/tf-a/trusted-firmware-a.git"
+TF_A_QEMU_REV=origin/cca/v4
 LINUX_CCA_HOST_REMOTE="https://git.gitlab.arm.com/linux-arm/linux-cca.git"
-LINUX_CCA_HOST_REV=origin/cca-full/rmm-v1.0-eac5
+LINUX_CCA_HOST_REV=origin/cca-full/v5+v7
 LINUX_CCA_REALM_REMOTE="https://git.gitlab.arm.com/linux-arm/linux-cca.git"
-LINUX_CCA_REALM_REV=origin/cca-full/rmm-v1.0-eac5
+LINUX_CCA_REALM_REV=origin/cca-full/v5+v7
 DTC_REMOTE="git://git.kernel.org/pub/scm/utils/dtc/dtc.git"
 DTC_REV=origin/master
-KVMTOOL_REMOTE="https://github.com/Havner/kvmtool-cca.git"
-KVMTOOL_REV=origin/eac5
+KVMTOOL_REMOTE="https://git.codelinaro.org/linaro/dcap/kvmtool.git"
+KVMTOOL_REV=origin/cca/log
 KVM_UNIT_TESTS_REMOTE="https://gitlab.arm.com/linux-arm/kvm-unit-tests-cca"
 KVM_UNIT_TESTS_REV=origin/cca/rmm-v1.0-eac5
 
@@ -106,11 +106,11 @@ GCC_ARM_NONE_LINUX_BIN=`gcc_print_bin "$GCC_ARM_NONE_LINUX"`
 FVP_BASE_REVC=https://developer.arm.com/-/media/Files/downloads/ecosystem-models/FVP_Base_RevC-2xAEMvA_11.18_16_Linux64.tgz
 FVP_SUBDIR=Base_RevC_AEMvA_pkg/models/Linux64_GCC-9.3
 
-QEMU_REMOTE=https://gitlab.com/qemu-project/qemu.git
-QEMU_REV=b1e880789bc7dc07617e45e2d63d635cdbf2bf6d
+QEMU_REMOTE=https://git.codelinaro.org/linaro/dcap/qemu.git
+QEMU_REV=origin/cca/v3
 QEMU_BIN="$QEMU/build/qemu-system-aarch64"
 
-FVP_BRANCH=fvp-cca-eac5
+FVP_BRANCH=fvp-cca
 
 
 function save_path() {
@@ -676,7 +676,7 @@ function run_qemu() {
     start ${FUNCNAME[0]}
     $QEMU_BIN                                                           \
         -M virt,virtualization=on,secure=on,gic-version=3               \
-        -M acpi=off -cpu max,x-rme=on,sme=off -m 3G -smp 8              \
+        -M acpi=off -cpu max,x-rme=on -m 8G -smp 8                      \
         -nographic                                                      \
         -bios "$OUT/flash.bin"                                          \
         -kernel "$OUT/Image"                                            \
