@@ -63,26 +63,26 @@ EDK2_MAIN_REMOTE=https://github.com/tianocore/edk2.git
 EDK2_MAIN_REV=master
 EDK2_PLATFORMS_REMOTE=https://github.com/tianocore/edk2-platforms
 EDK2_PLATFORMS_REV=master
-TF_RMM_REMOTE="https://github.com/Havner/trusted-firmware-rmm.git"
-TF_RMM_REV=origin/eac5
-TF_RMM_QEMU_REMOTE="https://jpbrucker.net/git/rmm"
-TF_RMM_QEMU_REV=origin/cca/rmm-v1.0-eac5
+TF_RMM_REMOTE="https://github.com/islet-project/3rd-tf-rmm"
+TF_RMM_REV=origin/main
+TF_RMM_QEMU_REMOTE="https://github.com/islet-project/3rd-tf-rmm"
+TF_RMM_QEMU_REV=origin/main
 MBEDTLS_REMOTE="https://github.com/Mbed-TLS/mbedtls.git"
 MBEDTLS_REV=mbedtls-3.4.1
-TF_A_REMOTE="https://github.com/Havner/trusted-firmware-a.git"
-TF_A_REV=origin/eac5
-TF_A_RSS_REMOTE="https://github.com/Havner/trusted-firmware-a.git"
-TF_A_RSS_REV=origin/eac5-rss
-TF_A_QEMU_REMOTE="https://jpbrucker.net/git/tf-a"
-TF_A_QEMU_REV=origin/cca/rmm-v1.0-eac5
-LINUX_CCA_HOST_REMOTE="https://git.gitlab.arm.com/linux-arm/linux-cca.git"
-LINUX_CCA_HOST_REV=origin/cca-full/rmm-v1.0-eac5
-LINUX_CCA_REALM_REMOTE="https://git.gitlab.arm.com/linux-arm/linux-cca.git"
-LINUX_CCA_REALM_REV=origin/cca-full/rmm-v1.0-eac5
+TF_A_REMOTE="https://github.com/islet-project/3rd-tf-a"
+TF_A_REV=origin/main
+TF_A_RSS_REMOTE="https://github.com/islet-project/3rd-tf-a"
+TF_A_RSS_REV=origin/hes
+TF_A_QEMU_REMOTE="https://github.com/islet-project/3rd-tf-a"
+TF_A_QEMU_REV=dev/lpawelczyk/qemu-mb-freeze
+LINUX_CCA_HOST_REMOTE="https://github.com/islet-project/3rd-linux"
+LINUX_CCA_HOST_REV=origin/cca-host/v5
+LINUX_CCA_REALM_REMOTE="https://github.com/islet-project/3rd-linux"
+LINUX_CCA_REALM_REV=origin/cca-guest/v6
 DTC_REMOTE="git://git.kernel.org/pub/scm/utils/dtc/dtc.git"
 DTC_REV=origin/master
-KVMTOOL_REMOTE="https://github.com/Havner/kvmtool-cca.git"
-KVMTOOL_REV=origin/eac5
+KVMTOOL_REMOTE="https://github.com/islet-project/3rd-kvmtool"
+KVMTOOL_REV=origin/cca/v3
 KVM_UNIT_TESTS_REMOTE="https://gitlab.arm.com/linux-arm/kvm-unit-tests-cca"
 KVM_UNIT_TESTS_REV=origin/cca/rmm-v1.0-eac5
 
@@ -104,13 +104,14 @@ GCC_AARCH64_NONE_LINUX_BIN=`gcc_print_bin "$GCC_AARCH64_NONE_LINUX"`
 GCC_ARM_NONE_LINUX_BIN=`gcc_print_bin "$GCC_ARM_NONE_LINUX"`
 
 FVP_BASE_REVC=https://developer.arm.com/-/media/Files/downloads/ecosystem-models/FVP_Base_RevC-2xAEMvA_11.18_16_Linux64.tgz
+#FVP_BASE_REVC=https://developer.arm.com/-/cdn-downloads/permalink/FVPs-Architecture/FM-11.29-42/FVP_Base_RevC-2xAEMvA_11.29_42_Linux64.tgz
 FVP_SUBDIR=Base_RevC_AEMvA_pkg/models/Linux64_GCC-9.3
 
-QEMU_REMOTE=https://gitlab.com/qemu-project/qemu.git
-QEMU_REV=b1e880789bc7dc07617e45e2d63d635cdbf2bf6d
+QEMU_REMOTE="https://github.com/qemu/qemu.git"
+QEMU_REV=origin/stable-9.2
 QEMU_BIN="$QEMU/build/qemu-system-aarch64"
 
-FVP_BRANCH=fvp-cca-eac5
+FVP_BRANCH=fvp-cca
 
 
 function save_path() {
@@ -457,25 +458,31 @@ function build_tf_rmm() {
 # The disabled are chosen arbitrarily by trial and error so
 # BL31 fits into the memory and still somehow works (hopefully).
 TF_A_OPTS="PLAT=fvp                                            \
-           MEASURED_BOOT=1                                     \
            FVP_HW_CONFIG_DTS=fdts/fvp-base-gicv3-psci-1t.dts   \
            BL33=$OUT/FVP_AARCH64_EFI.fd"
 
 TF_A_OPTS_RSS="$TF_A_OPTS                        \
-               PLAT_RSS_COMMS_USE_SERIAL=1       \
-               ENABLE_FEAT_AMUv1p1=0             \
-               ENABLE_MPAM_FOR_LOWER_ELS=0       \
-               ENABLE_FEAT_GCS=0                 \
-               ENABLE_FEAT_RAS=0                 \
-               ENABLE_TRBE_FOR_NS=0              \
-               ENABLE_SYS_REG_TRACE_FOR_NS=0     \
-               ENABLE_TRF_FOR_NS=0               \
-               ENABLE_FEAT_S2PIE=0               \
-               ENABLE_FEAT_S1PIE=0               \
-               ENABLE_FEAT_S2POE=0               \
-               ENABLE_FEAT_S1POE=0"
+               PLAT_RSE_COMMS_USE_SERIAL=1"
+
+               # MEASURED_BOOT=1                   \
+               # ENABLE_PAUTH=0                    \
+               # ENABLE_FEAT_MPAM=0                \
+               # ENABLE_FEAT_SME=0                 \
+               # ENABLE_FEAT_SVE=0                 \
+               # ENABLE_FEAT_AMUv1p1=0             \
+               # ENABLE_MPAM_FOR_LOWER_ELS=0       \
+               # ENABLE_FEAT_GCS=0                 \
+               # ENABLE_FEAT_RAS=0                 \
+               # ENABLE_TRBE_FOR_NS=0              \
+               # ENABLE_SYS_REG_TRACE_FOR_NS=0     \
+               # ENABLE_TRF_FOR_NS=0               \
+               # ENABLE_FEAT_S2PIE=0               \
+               # ENABLE_FEAT_S1PIE=0               \
+               # ENABLE_FEAT_S2POE=0               \
+               # ENABLE_FEAT_S1POE=0
 
 TF_A_OPTS_QEMU="PLAT=qemu                                           \
+                MEASURED_BOOT=1                                     \
                 QEMU_USE_GIC_DRIVER=QEMU_GICV3                      \
                 BL33=$OUT/QEMU_EFI.fd"
 
@@ -676,7 +683,7 @@ function run_qemu() {
     start ${FUNCNAME[0]}
     $QEMU_BIN                                                           \
         -M virt,virtualization=on,secure=on,gic-version=3               \
-        -M acpi=off -cpu max,x-rme=on,sme=off -m 3G -smp 8              \
+        -M acpi=off -cpu max,x-rme=on,sme=off -m 8G -smp 4              \
         -nographic                                                      \
         -bios "$OUT/flash.bin"                                          \
         -kernel "$OUT/Image"                                            \
@@ -684,7 +691,10 @@ function run_qemu() {
         -device virtio-net-pci,netdev=net0                              \
         -netdev tap,id=net0,ifname=cca0,script=no                       \
         -device virtio-9p-device,fsdev=shr0,mount_tag=FM                \
-        -fsdev local,security_model=none,path="$SHARED_DIR",id=shr0
+        -fsdev local,security_model=none,path="$SHARED_DIR",id=shr0     \
+        -chardev socket,id=chrtpm,path=/tmp/mytpm-sock                  \
+        -tpmdev emulator,id=tpm0,chardev=chrtpm                         \
+        -device tpm-tis-device,tpmdev=tpm0
 }
 
 function net_start() {
