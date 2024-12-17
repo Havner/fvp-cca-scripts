@@ -349,8 +349,7 @@ function init_qemu() {
     start ${FUNCNAME[0]}
     git clone "$QEMU_REMOTE" "$QEMU"                                    || stop
     pushd "$QEMU"
-    git checkout -b $FVP_BRANCH $QEMU_REV                               || stop
-    git submodule update --init --recursive                             || stop
+    git checkout --recurse-submodules -t -b $FVP_BRANCH $QEMU_REV       || stop
     ./configure --target-list=aarch64-softmmu                           || stop
     touch .projectile
     popd
