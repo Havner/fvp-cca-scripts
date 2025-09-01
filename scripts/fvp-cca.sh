@@ -23,11 +23,6 @@ while (( "$#" )); do
     fi
 done
 
-if [ "$USE_RSS" -ne 0 ] && [ "$USE_QEMU" -ne 0 ]; then
-    echo "RSS and QEMU don't work together"
-    exit 1
-fi
-
 # end of configuration
 
 
@@ -43,7 +38,6 @@ TF_RMM_QEMU="$ROOT/1.tf-rmm-qemu"
 MBEDTLS="$ROOT/2.mbedtls"
 TF_A="$ROOT/2.tf-a"
 TF_A_RSS="$ROOT/2.tf-a-rss"
-TF_A_QEMU="$ROOT/2.tf-a-qemu"
 LINUX_CCA_HOST="$ROOT/3.linux-cca-host"
 LINUX_CCA_REALM="$ROOT/4.linux-cca-realm"
 DTC="$ROOT/5.dtc"
@@ -73,8 +67,6 @@ TF_A_REMOTE="https://github.com/islet-project/3rd-tf-a"
 TF_A_REV=origin/main
 TF_A_RSS_REMOTE="https://github.com/islet-project/3rd-tf-a"
 TF_A_RSS_REV=origin/hes
-TF_A_QEMU_REMOTE="https://github.com/islet-project/3rd-tf-a"
-TF_A_QEMU_REV=dev/lpawelczyk/qemu-mb-freeze
 LINUX_CCA_HOST_REMOTE="https://github.com/islet-project/3rd-linux"
 LINUX_CCA_HOST_REV=origin/cca-host/v5
 LINUX_CCA_REALM_REMOTE="https://github.com/islet-project/3rd-linux"
@@ -188,7 +180,6 @@ function init_clean() {
     rm -rf "$MBEDTLS"
     rm -rf "$TF_A"
     rm -rf "$TF_A_RSS"
-    rm -rf "$TF_A_QEMU"
     rm -rf "$LINUX_CCA_HOST"
     rm -rf "$LINUX_CCA_REALM"
     rm -rf "$DTC"
@@ -250,11 +241,6 @@ function init_tf_a() {
     git clone "$TF_A_RSS_REMOTE" "$TF_A_RSS"                            || stop
     pushd "$TF_A_RSS"
     git checkout -t -b $FVP_BRANCH $TF_A_RSS_REV                        || stop
-    touch .projectile
-    popd
-    git clone "$TF_A_QEMU_REMOTE" "$TF_A_QEMU"                          || stop
-    pushd "$TF_A_QEMU"
-    git checkout -t -b $FVP_BRANCH $TF_A_QEMU_REV                       || stop
     touch .projectile
     popd
     success ${FUNCNAME[0]}
@@ -482,18 +468,24 @@ TF_A_OPTS_RSS="$TF_A_OPTS                        \
                # ENABLE_FEAT_S1POE=0
 
 TF_A_OPTS_QEMU="PLAT=qemu                                           \
-                MEASURED_BOOT=1                                     \
                 QEMU_USE_GIC_DRIVER=QEMU_GICV3                      \
                 BL33=$OUT/QEMU_EFI.fd"
+
+TF_A_OPTS_QEMU_RSS="$TF_A_OPTS_QEMU                                 \
+                    PLAT_RSE_COMMS_USE_SERIAL=1"
+                    # MEASURED_BOOT=1                                 \
 
 function build_tf_a() {
     start ${FUNCNAME[0]}
 
-    if [ "$USE_RSS" -ne 0 ]; then
+    if [ "$USE_RSS" -ne 0 -a "$USE_QEMU" -ne 0 ]; then
+        TF_A_DIR="$TF_A_RSS"
+        TF_A_CONFIG="$TF_A_OPTS_QEMU_RSS"
+    elif [ "$USE_RSS" -ne 0 ]; then
         TF_A_DIR="$TF_A_RSS"
         TF_A_CONFIG="$TF_A_OPTS_RSS"
     elif [ "$USE_QEMU" -ne 0 ]; then
-        TF_A_DIR="$TF_A_QEMU"
+        TF_A_DIR="$TF_A"
         TF_A_CONFIG="$TF_A_OPTS_QEMU"
     else
         TF_A_DIR="$TF_A"
@@ -681,6 +673,16 @@ function run_fvp() {
 
 function run_qemu() {
     start ${FUNCNAME[0]}
+
+    # Additional QEMU args:
+    QEMU_ARGS=""
+    if [ "$USE_RSS" -ne 0 ]; then
+        QEMU_ARGS="$QEMU_ARGS -serial tcp:0.0.0.0:5555,server,wait"
+        # -chardev socket,id=chrtpm,path=/tmp/mytpm-sock                  \
+        # -tpmdev emulator,id=tpm0,chardev=chrtpm                         \
+        # -device tpm-tis-device,tpmdev=tpm0                              \
+    fi
+
     $QEMU_BIN                                                           \
         -M virt,virtualization=on,secure=on,gic-version=3               \
         -M acpi=off -cpu max,x-rme=on,sme=off -m 8G -smp 4              \
@@ -688,13 +690,13 @@ function run_qemu() {
         -bios "$OUT/flash.bin"                                          \
         -kernel "$OUT/Image"                                            \
         -initrd "$OUT/initramfs-host.cpio.gz"                           \
+        -serial mon:stdio                                               \
+        -append "earlycon console=ttyAMA0,115200"                       \
         -device virtio-net-pci,netdev=net0                              \
         -netdev tap,id=net0,ifname=cca0,script=no                       \
         -device virtio-9p-device,fsdev=shr0,mount_tag=FM                \
         -fsdev local,security_model=none,path="$SHARED_DIR",id=shr0     \
-        -chardev socket,id=chrtpm,path=/tmp/mytpm-sock                  \
-        -tpmdev emulator,id=tpm0,chardev=chrtpm                         \
-        -device tpm-tis-device,tpmdev=tpm0
+        $QEMU_ARGS
 }
 
 function net_start() {
