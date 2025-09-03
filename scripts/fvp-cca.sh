@@ -472,8 +472,8 @@ TF_A_OPTS_QEMU="PLAT=qemu                                           \
                 BL33=$OUT/QEMU_EFI.fd"
 
 TF_A_OPTS_QEMU_RSS="$TF_A_OPTS_QEMU                                 \
+                    MEASURED_BOOT=1                                 \
                     PLAT_RSE_COMMS_USE_SERIAL=1"
-                    # MEASURED_BOOT=1                                 \
 
 function build_tf_a() {
     start ${FUNCNAME[0]}
@@ -677,10 +677,10 @@ function run_qemu() {
     # Additional QEMU args:
     QEMU_ARGS=""
     if [ "$USE_RSS" -ne 0 ]; then
-        QEMU_ARGS="$QEMU_ARGS -serial tcp:0.0.0.0:5555,server,wait"
-        # -chardev socket,id=chrtpm,path=/tmp/mytpm-sock                  \
-        # -tpmdev emulator,id=tpm0,chardev=chrtpm                         \
-        # -device tpm-tis-device,tpmdev=tpm0                              \
+        QEMU_ARGS="$QEMU_ARGS -serial tcp:0.0.0.0:5555,server,wait      \
+        -chardev socket,id=chrtpm,path=/tmp/mytpm-sock                  \
+        -tpmdev emulator,id=tpm0,chardev=chrtpm                         \
+        -device tpm-tis-device,tpmdev=tpm0"
     fi
 
     $QEMU_BIN                                                           \
