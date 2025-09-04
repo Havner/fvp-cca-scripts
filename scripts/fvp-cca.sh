@@ -676,11 +676,16 @@ function run_qemu() {
 
     # Additional QEMU args:
     QEMU_ARGS=""
+
     if [ "$USE_RSS" -ne 0 ]; then
         QEMU_ARGS="$QEMU_ARGS -serial tcp:0.0.0.0:5555,server,wait      \
         -chardev socket,id=chrtpm,path=/tmp/mytpm-sock                  \
         -tpmdev emulator,id=tpm0,chardev=chrtpm                         \
         -device tpm-tis-device,tpmdev=tpm0"
+
+	    pkill swtpm || true
+	    mkdir -p /tmp/mytpmstate
+	    swtpm socket --tpm2 --tpmstate dir=/tmp/mytpmstate --ctrl type=unixio,path=/tmp/mytpm-sock &
     fi
 
     $QEMU_BIN                                                           \
