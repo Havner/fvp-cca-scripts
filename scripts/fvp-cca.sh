@@ -8,7 +8,7 @@ USE_QEMU=0
 
 while (( "$#" )); do
     case $1 in
-        "--rss")
+        "--rss"|"--hes")
             USE_RSS=1
             ;;
         "--qemu")
