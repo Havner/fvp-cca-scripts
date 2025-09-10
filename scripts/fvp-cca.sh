@@ -34,7 +34,6 @@ PROVIDED="$ROOT/provided"
 
 EDK2="$ROOT/0.edk2"
 TF_RMM="$ROOT/1.tf-rmm"
-TF_RMM_QEMU="$ROOT/1.tf-rmm-qemu"
 MBEDTLS="$ROOT/2.mbedtls"
 TF_A="$ROOT/2.tf-a"
 TF_A_RSS="$ROOT/2.tf-a-rss"
@@ -59,8 +58,6 @@ EDK2_PLATFORMS_REMOTE=https://github.com/tianocore/edk2-platforms
 EDK2_PLATFORMS_REV=master
 TF_RMM_REMOTE="https://github.com/islet-project/3rd-tf-rmm"
 TF_RMM_REV=origin/main
-TF_RMM_QEMU_REMOTE="https://github.com/islet-project/3rd-tf-rmm"
-TF_RMM_QEMU_REV=origin/main
 MBEDTLS_REMOTE="https://github.com/Mbed-TLS/mbedtls.git"
 MBEDTLS_REV=mbedtls-3.4.1
 TF_A_REMOTE="https://github.com/islet-project/3rd-tf-a"
@@ -176,7 +173,6 @@ function init_clean() {
 
     rm -rf "$EDK2"
     rm -rf "$TF_RMM"
-    rm -rf "$TF_RMM_QEMU"
     rm -rf "$MBEDTLS"
     rm -rf "$TF_A"
     rm -rf "$TF_A_RSS"
@@ -214,13 +210,6 @@ function init_tf_rmm() {
     git clone --recursive "$TF_RMM_REMOTE" "$TF_RMM"                    || stop
     pushd "$TF_RMM"
     git checkout --recurse-submodules -t -b $FVP_BRANCH $TF_RMM_REV     || stop
-    touch .projectile
-    popd
-    git clone --recursive "$TF_RMM_QEMU_REMOTE" "$TF_RMM_QEMU"          || stop
-    pushd "$TF_RMM_QEMU"
-    # for some reason --recurse-submodules doesn't work here
-    git checkout -t -b $FVP_BRANCH $TF_RMM_QEMU_REV                     || stop
-    git submodule update --init --recursive                             || stop
     touch .projectile
     popd
     success ${FUNCNAME[0]}
@@ -413,17 +402,15 @@ function build_tf_rmm() {
     start ${FUNCNAME[0]}
 
     if [ "$USE_QEMU" -ne 0 ]; then
-        TF_RMM_DIR="$TF_RMM_QEMU"
         TF_RMM_CONFIG=qemu_virt_defcfg
     else
-        TF_RMM_DIR="$TF_RMM"
         TF_RMM_CONFIG=fvp_defcfg
     fi
 
     save_path
     export PATH="$GCC_AARCH64_NONE_ELF_BIN:$PATH"
     export CROSS_COMPILE=aarch64-none-elf-
-    pushd "$TF_RMM_DIR"
+    pushd "$TF_RMM"
     cmake                                                               \
         -DRMM_CONFIG=$TF_RMM_CONFIG                                     \
         -DRMM_PRINT_RIM=1                                               \
@@ -431,7 +418,7 @@ function build_tf_rmm() {
         -S . -B build/                                                  || stop
     bear --append -- cmake --build build/                               || stop
     cleanup_json
-    cp -fv "$TF_RMM_DIR/build/Release/rmm.img" "$OUT"                   || stop
+    cp -fv "$TF_RMM/build/Release/rmm.img" "$OUT"                       || stop
     popd
     unset CROSS_COMPILE
     restore_path
