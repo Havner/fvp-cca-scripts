@@ -638,6 +638,9 @@ function build() {
 }
 
 function run() {
+    pkill -9 FVP
+    pkill -9 qemu-system-aarch64
+
     if [ "$USE_QEMU" -ne 0 ]; then
         run_qemu
     else
