@@ -129,7 +129,7 @@ Summary of useful commands from the Realm:
 
 Some other command line options are supported:
 
-    --rss
+    --rss|--hes
 
 This causes the TF-A to be built with support HES/RSS through serial. This
 requires manually lanuching camellia-hes-host-app or some minirss to talk to
@@ -143,8 +143,6 @@ necessary. Runs and works faster than FVP. Network is configured in the same
 way.
 
 Those options must be specified before any commands.
-
-QEMU and RSS don't work together at the moment.
 
 # Other commands
 
