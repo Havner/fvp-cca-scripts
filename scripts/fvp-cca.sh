@@ -668,7 +668,7 @@ function run_qemu() {
     QEMU_ARGS=""
 
     if [ "$USE_RSS" -ne 0 ]; then
-        QEMU_ARGS="$QEMU_ARGS -serial tcp:0.0.0.0:5555,server,wait      \
+        QEMU_ARGS="$QEMU_ARGS -serial tcp:0.0.0.0:5002,server,wait      \
         -chardev socket,id=chrtpm,path=/tmp/mytpm-sock                  \
         -tpmdev emulator,id=tpm0,chardev=chrtpm                         \
         -device tpm-tis-device,tpmdev=tpm0"
